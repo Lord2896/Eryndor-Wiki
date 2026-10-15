@@ -44,6 +44,13 @@ for article in items:
         # rarity breakdowns or habitat-by-species hints in public articles.
         assert not re.search(r'<h3>\s*(?:Wszystkie\s+\d+\s+gatunków|Wyspa\s+[IVX]+|Tajemnicza lokalizacja|Overworld[^<]*\d+\s+gatunków|Nether[^<]*\d+\s+gatunków|End[^<]*\d+\s+gatunków)', article["content"], re.I), "Forbidden atlas spoiler heading"
         assert not re.search(r'<p>\s*<strong>\s*(?:Pospolity|Wyjątkowy|Legendarny)\s*:</strong>\s*[^<]+,\s*[^<]+', article["content"], re.I), "Forbidden rarity-based species list"
+    if article["id"] == "identity":
+        # Eryndor title tiers are implementation details, never player-facing.
+        for key in ("content", "summary", "search"):
+            assert not re.search(r'\b(?:T1|T2|T3|T4|SPEC)\b', article[key], re.I), "Internal Identity tier leaked"
+    if article["id"] == "cooking":
+        # Players discover named dishes and corresponding effects in the Atlas.
+        assert not re.search(r'<tr>\s*<td>[^<]*(?:Zupa|Gulasz|Uczta|Potrawka|Bulion|Kociołek)[^<]*</td>\s*<td>', article["content"], re.I), "Cooking effect catalogue reveals Atlas dishes"
     if article["id"] == "mushrooms":
         assert not re.search(r'/mushroom\s+(?:alchemist|sellhand)', article["content"], re.I), "Trade is NPC-operated, not a player command"
     ids.add(article["id"])
