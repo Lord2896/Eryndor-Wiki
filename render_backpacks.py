@@ -16,7 +16,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 MOD_REV = "974d5e1d74fdac91b20b026407b8ea5ba0e7ebc4"
-MC_REV = "ebbf50410804d1fe75cd849f5897fa55365516f2"
+MC_REV = "aef047f783f44424a591eeecf6b230d5bb0c8095"
 MOD_URL = f"https://raw.githubusercontent.com/P3pp3rF1y/SophisticatedBackpacks/{MOD_REV}/"
 MC_URL = f"https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/{MC_REV}/assets/minecraft/textures/"
 BASE = "src/main/resources/assets/sophisticatedbackpacks/"
