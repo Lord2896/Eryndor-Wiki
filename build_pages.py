@@ -49,8 +49,10 @@ for article in items:
         for key in ("content", "summary", "search"):
             assert not re.search(r'\b(?:T1|T2|T3|T4|SPEC)\b', article[key], re.I), "Internal Identity tier leaked"
     if article["id"] == "cooking":
-        # Players discover named dishes and corresponding effects in the Atlas.
-        assert not re.search(r'<tr>\s*<td>[^<]*(?:Zupa|Gulasz|Uczta|Potrawka|Bulion|Kociołek)[^<]*</td>\s*<td>', article["content"], re.I), "Cooking effect catalogue reveals Atlas dishes"
+        # Dish names, descriptions and effects are public; ingredient combinations
+        # remain a discovery mechanic exclusive to the in-game Atlas.
+        assert not re.search(r'<h[2-4]>[^<]*(?:przepisy na potrawy|lista składników|kombinacje składników)', article["content"], re.I), "Cooking ingredient spoiler heading"
+        assert not re.search(r'data-(?:ingredients|recipe-grid)=|recipe_ingredients', article["content"], re.I), "Cooking ingredient combinations must not be published"
     if article["id"] == "mushrooms":
         assert not re.search(r'/mushroom\s+(?:alchemist|sellhand)', article["content"], re.I), "Trade is NPC-operated, not a player command"
     ids.add(article["id"])
