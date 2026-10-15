@@ -35,6 +35,13 @@ for article in items:
         assert isinstance(article.get(key), str), f"Invalid {key}"
     assert isinstance(article.get("tags"), list)
     assert article["id"] not in ids, f"Duplicate article: {article['id']}"
+    # "Eryndor" is masculine; genitive must be "Eryndoru", not "Eryndora".
+    # Search title, visible text, keyword index and tags to prevent regression.
+    for key in ("title", "summary", "content", "search"):
+        assert not re.search(r'\bEryndora\b', article[key], re.I), "Incorrect Eryndor declension: use Eryndoru"
+    for tag in article["tags"]:
+        assert isinstance(tag, str) and not re.search(r'\bEryndora\b', tag, re.I), "Incorrect Eryndor declension in tags"
+
     # Cooking recipes must be discovered by players inside the Minecraft Atlas.
     # Never publish the historical spoiler article or its auto-generated slot lists.
     assert article["id"] != "cooking-recipes", "Cooking spoiler article must not be published"
