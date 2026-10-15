@@ -13,6 +13,7 @@ import argparse
 import hashlib
 import json
 import re
+import shutil
 from pathlib import Path
 
 here = Path(__file__).resolve().parent
@@ -61,6 +62,19 @@ if not args.check:
     output = here / "_site"
     output.mkdir(exist_ok=True)
     (output / "articles.json").write_bytes(raw)
+    # Ship approved, self-contained recipe art together with the JSON feed.
+    # SVG is textual, with authentic item/model textures embedded as PNG data.
+    recipe_assets = here / "assets" / "crafting"
+    if recipe_assets.is_dir():
+        publish_assets = output / "assets" / "crafting"
+        publish_assets.mkdir(parents=True, exist_ok=True)
+        for path in recipe_assets.glob("*.svg"):
+            svg = path.read_text(encoding="utf-8")
+            assert svg.startswith('<?xml') or svg.startswith('<svg'), "Invalid SVG asset"
+            assert len(svg) < 300_000, "Oversized recipe SVG"
+            assert not re.search(r'<script\\b|\\bon\\w+\\s*=|javascript:', svg, re.I), "Unsafe recipe SVG"
+            shutil.copyfile(path, publish_assets / path.name)
+
     manifest = {
         "schema": 1,
         "revision": revision,
