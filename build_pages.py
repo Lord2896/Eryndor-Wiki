@@ -85,6 +85,22 @@ if not args.check:
     assert "@@BACKPACK_CARD:" not in backpack["content"], "Unresolved backpack image"
     assert len(backpack["content"]) < 350000, "Images exceed Android article size limit"
     raw = (json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
+    # Waystones 21.1.45 cards: real mod/vanilla textures, 11 verified recipes.
+    # Inline WEBP data URIs are supported by Android 0.5.1 and work offline.
+    from render_waystones import IDS as WAYSTONES_IDS, generate as build_waystones_cards
+    waystones_images = build_waystones_cards(output / "assets" / "crafting" / "waystones")
+    waystones = next(article for article in items if article["id"] == "waystones")
+    for key in WAYSTONES_IDS:
+        marker = "@@WAYSTONES_CARD:" + key + "@@"
+        assert waystones["content"].count(marker) == 1, "Missing or duplicated Waystones image: " + key
+        image = waystones_images[key]
+        assert image.startswith("data:image/webp;base64,"), "Waystones asset must be self-contained WEBP"
+        replacement = ('<img class="recipe-image" src="' + image + '" '
+                       'alt="Waystones 21.1.45 — crafting ' + key.replace("_", " ") + '." />')
+        waystones["content"] = waystones["content"].replace(marker, replacement)
+    assert "@@WAYSTONES_CARD:" not in waystones["content"], "Unresolved Waystones recipe image"
+    assert len(waystones["content"]) < 1200000, "Waystones article exceeds maximum image size"
+    raw = (json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
     (output / "articles.json").write_bytes(raw)
     # Ship approved, self-contained recipe art together with the JSON feed.
     # SVG is textual, with authentic item/model textures embedded as PNG data.
