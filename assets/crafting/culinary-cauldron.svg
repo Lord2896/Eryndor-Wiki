@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 1200 720" width="1200" height="720" role="img" aria-labelledby="title desc">
+<title id="title">Kociołek Kulinarny — crafting</title><desc id="desc">Rząd 1: sztabka miedzi, pusty, sztabka miedzi. Rząd 2: sztabka żelaza, pusty, sztabka żelaza. Rząd 3: sztabka żelaza, blok żelaza, sztabka żelaza. Rezultat: Kociołek Kulinarny.</desc>
+<rect width="1200" height="720" fill="#242025"/>
+<rect x="19" y="18" width="1162" height="684" rx="30" fill="#ac8852"/>
+<rect x="35" y="34" width="1130" height="650" rx="19" fill="#e4d0a0"/>
+<rect x="50" y="50" width="1100" height="615" rx="16" fill="none" stroke="#ae8b5b" stroke-width="2"/>
+<g font-family="DejaVu Sans,Arial,sans-serif" fill="#37281f">
+<text x="600" y="96" text-anchor="middle" font-size="43" font-weight="700">Kociołek Kulinarny</text>
+<text x="600" y="135" text-anchor="middle" font-size="20">Pixelmon Cooking — przepis na blok</text>
+<path d="M72 150H1128" stroke="#82623e" stroke-width="3"/>
+<g><rect x="122" y="183" width="104" height="104" rx="8" fill="#f1e4c8" stroke="#987e5d" stroke-width="3"/><image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAG1BMVEUAAAD7
+w7b8mYLnfFbBWjacTjGcRSmKQSltNCFALkIDAAAAAXRSTlMAQObYZgAAAF9J
+REFUeNpjwAHSIBRbmksBmJvsGmIO4jqbhDqbFDAkORu7hhgrmTMkK5u4GCm5
+RjAkOxkrKbuEAxkhQq4hruUeDMmhKqFAgQYGNlfVENeOBgYGhlRTjw6IuRkN
+2O0FAIf/FK7CRf/vAAAAAElFTkSuQmCC
+" x="141" y="202" width="66" height="66" style="image-rendering:pixelated"/></g>
+<g><rect x="234" y="183" width="104" height="104" rx="8" fill="#f1e4c8" stroke="#987e5d" stroke-width="3"/></g>
+<g><rect x="346" y="183" width="104" height="104" rx="8" fill="#f1e4c8" stroke="#987e5d" stroke-width="3"/><image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAG1BMVEUAAAD7
+w7b8mYLnfFbBWjacTjGcRSmKQSltNCFALkIDAAAAAXRSTlMAQObYZgAAAF9J
+REFUeNpjwAHSIBRbmksBmJvsGmIO4jqbhDqbFDAkORu7hhgrmTMkK5u4GCm5
+RjAkOxkrKbuEAxkhQq4hruUeDMmhKqFAgQYGNlfVENeOBgYGhlRTjw6IuRkN
+2O0FAIf/FK7CRf/vAAAAAElFTkSuQmCC
+" x="365" y="202" width="66" height="66" style="image-rendering:pixelated"/></g>
+<g><rect x="122" y="295" width="104" height="104" rx="8" fill="#f1e4c8" stroke="#987e5d" stroke-width="3"/><image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhElEQVQ4y9WS
+wQnAIBAEbcpefFmEJViNJdmNYQ82OeVUzCdkYfEgzhhinPtNYowNfQWhpRRp
+SqkdQbXWrqZkBy0lgJAdxDKYRcJTVxIdgmC8949glIxQzllAFLMpoMSCWL33
+FtDID7gC8QygwPoWKLFeV0MdOF4lJVhDCHto9hMdQZ/nAqzufev6TWmcAAAA
+AElFTkSuQmCC
+" x="141" y="314" width="66" height="66" style="image-rendering:pixelated"/></g>
+<g><rect x="234" y="295" width="104" height="104" rx="8" fill="#f1e4c8" stroke="#987e5d" stroke-width="3"/></g>
+<g><rect x="346" y="295" width="104" height="104" rx="8" fill="#f1e4c8" stroke="#987e5d" stroke-width="3"/><image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhElEQVQ4y9WS
+wQnAIBAEbcpefFmEJViNJdmNYQ82OeVUzCdkYfEgzhhinPtNYowNfQWhpRRp
+SqkdQbXWrqZkBy0lgJAdxDKYRcJTVxIdgmC8949glIxQzllAFLMpoMSCWL33
+FtDID7gC8QygwPoWKLFeV0MdOF4lJVhDCHto9hMdQZ/nAqzufev6TWmcAAAA
+AElFTkSuQmCC
+" x="365" y="314" width="66" height="66" style="image-rendering:pixelated"/></g>
+<g><rect x="122" y="407" width="104" height="104" rx="8" fill="#f1e4c8" stroke="#987e5d" stroke-width="3"/><image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhElEQVQ4y9WS
+wQnAIBAEbcpefFmEJViNJdmNYQ82OeVUzCdkYfEgzhhinPtNYowNfQWhpRRp
+SqkdQbXWrqZkBy0lgJAdxDKYRcJTVxIdgmC8949glIxQzllAFLMpoMSCWL33
+FtDID7gC8QygwPoWKLFeV0MdOF4lJVhDCHto9hMdQZ/nAqzufev6TWmcAAAA
+AElFTkSuQmCC
+" x="141" y="426" width="66" height="66" style="image-rendering:pixelated"/></g>
+<g><rect x="234" y="407" width="104" height="104" rx="8" fill="#f1e4c8" stroke="#987e5d" stroke-width="3"/><g transform="translate(286 461) scale(.86)" stroke="#747474" stroke-width=".8">
+ <polygon points="-33,-16 0,0 0,40 -33,24" fill="#bfc1c5"/>
+ <polygon points="0,0 33,-16 33,24 0,40" fill="#e5e5e5"/>
+ <polygon points="-33,-16 0,-34 33,-16 0,1" fill="#f4f4f4"/>
+ <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAIVBMVEXy8vLs
+7Ozq6urm5ubg4ODc3NzW1tbRz8/BwcG5ubmxsLCiWbjLAAAAUklEQVR42mOo
+aC8vL6/oaGdoYGAQFDI2tmBoNgYDS4aloaGhLm5pWSApRkGgCIqUi0saSIpR
+UNAYXSo0xAWmSxhNKgRiIFgGWaqjo6NzxsyZMwEQ+CRmFxowEQAAAABJRU5E
+rkJggg==
+" width="16" height="16" transform="matrix(2.0625 1 0 2.5 -33 -16)" style="image-rendering:pixelated" opacity=".75"/>
+ <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAIVBMVEXy8vLs
+7Ozq6urm5ubg4ODc3NzW1tbRz8/BwcG5ubmxsLCiWbjLAAAAUklEQVR42mOo
+aC8vL6/oaGdoYGAQFDI2tmBoNgYDS4aloaGhLm5pWSApRkGgCIqUi0saSIpR
+UNAYXSo0xAWmSxhNKgRiIFgGWaqjo6NzxsyZMwEQ+CRmFxowEQAAAABJRU5E
+rkJggg==
+" width="16" height="16" transform="matrix(2.0625 -1 0 2.5 0 0)" style="image-rendering:pixelated" opacity=".88"/>
+ <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAAIVBMVEXy8vLs
+7Ozq6urm5ubg4ODc3NzW1tbRz8/BwcG5ubmxsLCiWbjLAAAAUklEQVR42mOo
+aC8vL6/oaGdoYGAQFDI2tmBoNgYDS4aloaGhLm5pWSApRkGgCIqUi0saSIpR
+UNAYXSo0xAWmSxhNKgRiIFgGWaqjo6NzxsyZMwEQ+CRmFxowEQAAAABJRU5E
+rkJggg==
+" width="16" height="16" transform="matrix(2.0625 -1.1 2.0625 1.1 -33 -16)" style="image-rendering:pixelated"/>
+ <path d="M-33 -16 L0 -34 L33 -16 L33 24 L0 40 L-33 24 Z M-33 -16 L0 0 L33 -16 M0 0 L0 40" fill="none" stroke="#85878d" stroke-width="1.2"/>
+ </g></g>
+<g><rect x="346" y="407" width="104" height="104" rx="8" fill="#f1e4c8" stroke="#987e5d" stroke-width="3"/><image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAhElEQVQ4y9WS
+wQnAIBAEbcpefFmEJViNJdmNYQ82OeVUzCdkYfEgzhhinPtNYowNfQWhpRRp
+SqkdQbXWrqZkBy0lgJAdxDKYRcJTVxIdgmC8949glIxQzllAFLMpoMSCWL33
+FtDID7gC8QygwPoWKLFeV0MdOF4lJVhDCHto9hMdQZ/nAqzufev6TWmcAAAA
+AElFTkSuQmCC
+" x="365" y="426" width="66" height="66" style="image-rendering:pixelated"/></g>
+<polygon points="559,316 662,316 662,286 735,350 662,414 662,384 559,384" fill="#70543a"/>
+<rect x="801" y="205" width="246" height="269" rx="12" fill="#f1e4c8" stroke="#987e5d" stroke-width="4"/>
+<g transform="translate(925 320) scale(1.04)">
+ <ellipse cx="0" cy="104" rx="116" ry="18" fill="#79664a" opacity=".28"/>
+ <path d="M-83 49 L-66 58 L-66 106 L-83 97 Z M62 58 L78 49 L78 97 L62 106 Z M-8 79 L8 80 L8 118 L-8 119 Z" fill="#323638" stroke="#141414" stroke-width="2"/>
+ <path d="M-93 -38 L0 5 L0 83 L-93 40Z" fill="#46494d" stroke="#242728" stroke-width="2"/>
+ <path d="M0 5 L93 -38 L93 40 L0 83Z" fill="#3b4042" stroke="#242728" stroke-width="2"/>
+ <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA/UlEQVR4nM2T
+QUvDQBBGX5Y6YIrUUrxpbWMbi9gKioj//yAeRMSDoKIetApSNEjpFBfiQQjJ
+Jo3Nzds385hd9g3rBd0w9n0fay3WWtLZrYtYTUQ4qEcAXH6tMVz9AOBq2uC4
+OQMirmdNjhpTYM7Z+wqnG98AnE8UbzQ8jK21tLc2ub27//NGNxtVRVV5fhkj
+IqgqIpJkt+5stzPMpKE7GHQ7Ofbw+JSpvd7OIK4qLidRVZOGMQZVzeQyVnMb
+yw4mbBlxRSzs9/ISF4krOnT8+vYrMezvxVXFpVnpGsv2/8/WmP4cJ605AJP1
+gNbnDQAXUX3hh/MGu/s5iVWe8QP8QpDvPzQcAAAAAABJRU5ErkJggg==
+" width="16" height="16" transform="matrix(5.8125 2.6875 0 4.875 -93 -38)" style="image-rendering:pixelated"/>
+ <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAA/UlEQVR4nM2T
+QUvDQBBGX5Y6YIrUUrxpbWMbi9gKioj//yAeRMSDoKIetApSNEjpFBfiQQjJ
+Jo3Nzds385hd9g3rBd0w9n0fay3WWtLZrYtYTUQ4qEcAXH6tMVz9AOBq2uC4
+OQMirmdNjhpTYM7Z+wqnG98AnE8UbzQ8jK21tLc2ub27//NGNxtVRVV5fhkj
+IqgqIpJkt+5stzPMpKE7GHQ7Ofbw+JSpvd7OIK4qLidRVZOGMQZVzeQyVnMb
+yw4mbBlxRSzs9/ISF4krOnT8+vYrMezvxVXFpVnpGsv2/8/WmP4cJ605AJP1
+gNbnDQAXUX3hh/MGu/s5iVWe8QP8QpDvPzQcAAAAAABJRU5ErkJggg==
+" width="16" height="16" transform="matrix(5.8125 -2.6875 0 4.875 0 5)" style="image-rendering:pixelated"/>
+ <path d="M-93 -38 L0 5 L93 -38 L93 40 L0 83 L-93 40 Z M0 5 L0 83" fill="none" stroke="#161819" stroke-width="3"/>
+ <polygon points="-93,-38 0,-87 93,-38 0,9" fill="#424547" stroke="#141718" stroke-width="3"/>
+ <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAfklEQVR4nGMs
+dVX7/+zjbwYGBgYGKX5WBlLZTJRofvbxNwMLjHPwvRADDNx+z0CQzfDxJQMD
+AwMDE7KppAIpflYGFnTNT54+watJRloGrvnZx98MTDAOqQBmMcVeYKJE86gX
+IBazoHsBFs/EuoJiL8DzAixtk5qpmMjNhTA2AEQceYox7ijYAAAAAElFTkSu
+QmCC
+" width="16" height="16" transform="matrix(5.8125 -3.0625 5.8125 3.0625 -93 -38)" style="image-rendering:pixelated"/>
+ <polygon points="-62,-38 0,-69 62,-38 0,-6" fill="#26292a" stroke="#111315" stroke-width="4"/>
+ <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZ0lEQVR4nO2Q
+wQ2AMAwDHSvMUASIOdj/wSoskai8CoV+2r5rKZ9TrDiWOSxRRJCPmaGWKUmI
+CI5AvJpQ6svOy0ASsq17bLn4Z+ruSCnypVr2vNBqTEzdvctYlNibQkl2xx8l
+jhITuwFUaJ9TFG7E9wAAAABJRU5ErkJggg==
+" width="16" height="16" transform="matrix(3.875 -1.9375 3.875 1.9375 -62 -38)" style="image-rendering:pixelated"/>
+ <polygon points="-93,-38 0,-87 93,-38 0,9" fill="none" stroke="#25292c" stroke-width="4"/>
+ </g>
+<text x="925" y="453" text-anchor="middle" font-size="20" font-weight="600">Kociołek Kulinarny</text>
+<path d="M75 544H1125" stroke="#82623e" stroke-width="2"/>
+<text x="89" y="580" font-size="25" font-weight="700">Składniki</text>
+<text x="98" y="618" font-size="20">2 × sztabka miedzi</text>
+<text x="429" y="618" font-size="20">4 × sztabka żelaza</text>
+<text x="791" y="618" font-size="20">1 × blok żelaza</text>
+</g>
+</svg>
