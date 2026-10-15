@@ -8,6 +8,7 @@ on:
     paths:
       - 'articles.json'
       - 'build_pages.py'
+      - 'render_backpacks.py'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 permissions:
@@ -25,6 +26,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install image renderer dependencies
+        run: python3 -m pip install 'Pillow>=10,<13' 'numpy>=1.26,<3'
       - name: Validate and build JSON content
         run: python3 build_pages.py
       - name: Configure Pages
