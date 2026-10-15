@@ -38,6 +38,17 @@ TITLE = {
     "portal_scroll": "Portal Scroll", "white_portstone": "Biały Portstone",
     "black_sharestone": "Czarny Sharestone",
 }
+TITLE_EN = dict(TITLE, white_portstone="White Portstone", black_sharestone="Black Sharestone")
+LABEL_EN = {
+ "minecraft:ender_pearl":"Ender Pearl","minecraft:amethyst_shard":"Amethyst Shard",
+ "minecraft:emerald":"Emerald","minecraft:flint":"Flint","minecraft:gold_nugget":"Gold Nugget",
+ "minecraft:paper":"Paper","minecraft:ink_sac":"Ink Sac","minecraft:feather":"Feather",
+ "minecraft:white_dye":"White Dye","minecraft:black_dye":"Black Dye",
+ "minecraft:stone_bricks":"Stone Bricks","minecraft:obsidian":"Obsidian",
+ "minecraft:polished_andesite":"Polished Andesite",
+ "waystones:warp_stone":"Warp Stone","waystones:warp_dust":"Warp Dust",
+ "waystones:dormant_shard":"Dormant Shard"
+}
 # Tested by reading the original JAR recipe JSON in this project's conversation.
 EXPECTED = {
     "warp_dust": ("shapeless", ["minecraft:ender_pearl", "minecraft:amethyst_shard"], 4),
@@ -213,17 +224,17 @@ def scaled_icon(canvas,raw,x,y,size=78):
     tile=raw.resize((max(1,round(raw.width*ratio)),max(1,round(raw.height*ratio))),res)
     canvas.alpha_composite(tile,(round(x+(size-tile.width)/2),round(y+(size-tile.height)/2)))
 
-def generate_card(key,recipe,icons):
+def generate_card(key,recipe,icons,lang='pl'):
     W,H=1200,720
     canvas=Image.new("RGBA",(W,H),"#242025")
     d=ImageDraw.Draw(canvas)
     d.rounded_rectangle((19,18,1180,702),radius=30,fill="#ac8852")
     d.rounded_rectangle((35,34,1165,683),radius=19,fill="#e4d0a0")
-    title=TITLE[key]
+    title=(TITLE_EN if lang=='en' else TITLE)[key]
     title_f=font(43,True)
     d.text((600,64),title,font=title_f,fill="#382b1f",anchor="ma")
     shapeless=recipe["type"].endswith("crafting_shapeless")
-    d.text((600,119),"Bezkształtny — dowolny układ" if shapeless else "Stół craftingowy — 3 × 3",
+    d.text((600,119),("Shapeless — any arrangement" if shapeless else "Crafting Table — 3 × 3") if lang=="en" else ("Bezkształtny — dowolny układ" if shapeless else "Stół craftingowy — 3 × 3"),
            font=font(22),fill="#4c3d2b",anchor="ma")
     d.line((75,157,1125,157),fill="#92724c",width=2)
     recipe_slots=slots(recipe)
@@ -237,37 +248,42 @@ def generate_card(key,recipe,icons):
     draw_slot(828,244,184)
     result=recipe["result"]["id"]
     scaled_icon(canvas,icons[result],860,277,122)
-    d.text((920,458),TITLE[key],anchor="ma",fill="#382b1f",font=font(19,True))
+    d.text((920,458),(TITLE_EN if lang=="en" else TITLE)[key],anchor="ma",fill="#382b1f",font=font(19,True))
     count=recipe["result"]["count"]
     if count>1:d.text((1005,405),f"×{count}",fill="#2e2420",font=font(24,True))
     d.line((75,548,1125,548),fill="#92724c",width=2)
-    d.text((86,566),"Składniki",font=font(27,True),fill="#382b1f")
+    d.text((86,566),"Ingredients" if lang=="en" else "Składniki",font=font(27,True),fill="#382b1f")
     needed=collections.OrderedDict()
     for item in recipe_slots:
         if item:needed[item]=needed.get(item,0)+1
     for i,(item,count) in enumerate(needed.items()):
         x=88+(i%3)*350;y=611+(i//3)*39
         scaled_icon(canvas,icons[item],x,y-3,34)
-        label=LABEL.get(item,TITLE.get(item.split(":")[-1],item))
+        label=(LABEL_EN if lang=="en" else LABEL).get(item,(TITLE_EN if lang=="en" else TITLE).get(item.split(":")[-1],item))
         if len(label)>24:label=label[:23]+"…"
         d.text((x+47,y),f"{count} × {label}",font=font(18),fill="#382b1f")
     return canvas.convert("RGB")
 
-def generate(outdir):
-    outdir=Path(outdir);outdir.mkdir(parents=True,exist_ok=True)
+def generate_bilingual(outdir_pl,outdir_en):
+    destinations=[Path(outdir_pl),Path(outdir_en)]
+    for dest in destinations: dest.mkdir(parents=True,exist_ok=True)
     recipes=get_recipes()
     icons=load_icons()
-    images={}
+    outputs=[{},{}]
     for key in IDS:
-        image=generate_card(key,recipes[key],icons)
-        buffer=io.BytesIO()
-        image.save(buffer,format="WEBP",quality=76,method=6)
-        raw=buffer.getvalue()
-        images[key]="data:image/webp;base64,"+base64.b64encode(raw).decode("ascii")
-        assert len(images[key])<240000, ("Data URI too large",key)
-        (outdir/(key+".webp")).write_bytes(raw)
-        print("Waystones card:",key,len(raw),"bytes")
-    return images
+        for i,lang in enumerate(("pl","en")):
+            image=generate_card(key,recipes[key],icons,lang)
+            buffer=io.BytesIO()
+            image.save(buffer,format="WEBP",quality=76,method=6)
+            raw=buffer.getvalue()
+            outputs[i][key]="data:image/webp;base64,"+base64.b64encode(raw).decode("ascii")
+            assert len(outputs[i][key])<240000, ("Data URI too large",key)
+            (destinations[i]/(key+".webp")).write_bytes(raw)
+            print("Waystones card:",key,lang,len(raw),"bytes")
+    return tuple(outputs)
+
+def generate(outdir):
+    return generate_bilingual(outdir,Path(outdir).parent/"_en")[0]
 
 if __name__=="__main__":
     import sys
