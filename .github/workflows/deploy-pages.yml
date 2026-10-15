@@ -9,6 +9,7 @@ on:
       - 'articles.json'
       - 'build_pages.py'
       - 'render_backpacks.py'
+      - 'render_waystones.py'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 permissions:
