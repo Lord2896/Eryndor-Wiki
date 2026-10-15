@@ -68,6 +68,23 @@ print(f"Validated revision {revision}, {len(items)} articles")
 if not args.check:
     output = here / "_site"
     output.mkdir(exist_ok=True)
+    # Render the seven approved backpack recipes using SHA-verified resources
+    # from the exact Sophisticated Backpacks 3.26.12.2208 JAR. Embed images
+    # into the JSON itself so Android WebView renders them fully offline.
+    from render_backpacks import IDS as BACKPACK_IDS, generate as build_backpack_cards
+    backpack_images = build_backpack_cards(output / "assets" / "crafting" / "backpacks")
+    backpack = next(article for article in items if article["id"] == "backpacks")
+    for key in BACKPACK_IDS:
+        marker = "@@BACKPACK_CARD:" + key + "@@"
+        assert backpack["content"].count(marker) == 1, "Missing or duplicated backpack image placeholder: " + key
+        image = backpack_images[key]
+        assert image.startswith("data:image/png;base64,"), "Backpack image is not self-contained PNG"
+        replacement = ('<img class="recipe-image" src="' + image + '" '
+                       'alt="Crafting plecaka: ' + key.replace("_", " ") + '." />')
+        backpack["content"] = backpack["content"].replace(marker, replacement)
+    assert "@@BACKPACK_CARD:" not in backpack["content"], "Unresolved backpack image"
+    assert len(backpack["content"]) < 350000, "Images exceed Android article size limit"
+    raw = (json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
     (output / "articles.json").write_bytes(raw)
     # Ship approved, self-contained recipe art together with the JSON feed.
     # SVG is textual, with authentic item/model textures embedded as PNG data.
