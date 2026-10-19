@@ -7,6 +7,7 @@ on:
     branches: [main]
     paths:
       - 'articles.json'
+      - 'translations/**'
       - 'build_pages.py'
       - 'render_backpacks.py'
       - 'render_waystones.py'
