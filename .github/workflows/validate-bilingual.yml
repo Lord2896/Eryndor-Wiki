@@ -1,7 +1,7 @@
 name: Validate Eryndor Wiki PL-EN
 on:
   push:
-    branches: [wiki-v0.6.0-pl-en]
+    branches: [wiki-v0.6.0-pl-en, wiki-kroniki-2026-10-19, main]
     paths:
       - 'articles.json'
       - 'translations/**'
@@ -36,18 +36,30 @@ jobs:
           meta=json.loads((site/'manifest-v2.json').read_text())
           assert legacy['schema']==1 and meta['schema']==2
           assert legacy['revision']==meta['languages']['pl']['revision']
+          pl_packet=json.loads((site/'articles.json').read_text())
+          en_packet=json.loads((site/'articles.en.json').read_text())
+          pl_ids=[a['id'] for a in pl_packet['articles']]
+          en_ids={a['id'] for a in en_packet['articles']}
+          chronicle_ids=[
+            'chronicles-story-1','chronicles-story-2','chronicles-story-3',
+            'chronicles-story-4','chronicles-story-5','chronicles-story-6',
+            'chronicles-peoples','chronicles-introduction','chronicles-trials'
+          ]
+          assert len(pl_ids)==21 and pl_ids[-9:]==chronicle_ids, (len(pl_ids),pl_ids[-9:])
+          assert len(en_ids)==13, len(en_ids)
+          assert set(pl_ids)-en_ids==set(chronicle_ids[:-1]), "Unexpected missing English articles"
           for locale,entry in meta['languages'].items():
               blob=(site/entry['file']).read_bytes()
               packet=json.loads(blob)
-              assert len(packet['articles'])==12, (locale,len(packet['articles']))
               assert packet['revision']==entry['revision']
               assert hashlib.sha256(blob).hexdigest()==entry['sha256']
               ids={a['id'] for a in packet['articles']}
-              assert len(ids)==12
+              assert len(ids)==len(packet['articles']), "Duplicated article ID"
+              assert ids.issubset(set(pl_ids)), (locale,ids-set(pl_ids))
               for a in packet['articles']:
                   assert not re.search(r'@@(?:BACKPACK|WAYSTONES)_CARD:|@@COOKING_IMAGE@@',a['content'])
                   for target in re.findall(r'data-go="([^"]+)"',a['content']):
-                      assert target in ids, (locale,a['id'],target)
+                      assert target in pl_ids, (locale,a['id'],target)
           assert meta['languages']['pl']['sha256']==legacy['sha256']
-          print("PL/EN: 12 articles each, matching SHA-256 and article links")
+          print("21 Polish articles; 13 English articles; 8 full-length Chronicles use documented Polish fallback.")
           PY
