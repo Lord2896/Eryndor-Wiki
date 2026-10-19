@@ -39,15 +39,15 @@ jobs:
           for locale,entry in meta['languages'].items():
               blob=(site/entry['file']).read_bytes()
               packet=json.loads(blob)
-              assert len(packet['articles'])==11, (locale,len(packet['articles']))
+              assert len(packet['articles'])==12, (locale,len(packet['articles']))
               assert packet['revision']==entry['revision']
               assert hashlib.sha256(blob).hexdigest()==entry['sha256']
               ids={a['id'] for a in packet['articles']}
-              assert len(ids)==11
+              assert len(ids)==12
               for a in packet['articles']:
                   assert not re.search(r'@@(?:BACKPACK|WAYSTONES)_CARD:|@@COOKING_IMAGE@@',a['content'])
                   for target in re.findall(r'data-go="([^"]+)"',a['content']):
                       assert target in ids, (locale,a['id'],target)
           assert meta['languages']['pl']['sha256']==legacy['sha256']
-          print("PL/EN: 11 articles each, matching SHA-256 and article links")
+          print("PL/EN: 12 articles each, matching SHA-256 and article links")
           PY
