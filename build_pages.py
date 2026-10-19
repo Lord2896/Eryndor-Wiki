@@ -10,6 +10,8 @@ Works in this folder in Eryndor-Mods, or at the root of a separate
 public Eryndor-Wiki repository (with the same articles.json).
 """
 import argparse
+import base64
+import copy
 import hashlib
 import json
 import re
@@ -26,6 +28,7 @@ data = json.loads(raw)
 assert data.get("schema") == 1, "Unsupported schema"
 revision = data.get("revision")
 assert isinstance(revision, int) and revision > 0, "Revision must be positive"
+source_articles = copy.deepcopy(data.get("articles", []))
 items = data.get("articles")
 assert isinstance(items, list) and 0 < len(items) <= 300, "Expected 1-300 articles"
 ids = set()
@@ -71,8 +74,10 @@ if not args.check:
     # Render the seven approved backpack recipes using SHA-verified resources
     # from the exact Sophisticated Backpacks 3.26.12.2208 JAR. Embed images
     # into the JSON itself so Android WebView renders them fully offline.
-    from render_backpacks import IDS as BACKPACK_IDS, generate as build_backpack_cards
-    backpack_images = build_backpack_cards(output / "assets" / "crafting" / "backpacks")
+    from render_backpacks import IDS as BACKPACK_IDS, generate_bilingual as build_backpack_cards
+    backpack_images, backpack_images_en = build_backpack_cards(
+        output / "assets" / "crafting" / "backpacks",
+        output / "assets" / "crafting" / "backpacks-en")
     backpack = next(article for article in items if article["id"] == "backpacks")
     for key in BACKPACK_IDS:
         marker = "@@BACKPACK_CARD:" + key + "@@"
@@ -87,8 +92,10 @@ if not args.check:
     raw = (json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
     # Waystones 21.1.45 cards: real mod/vanilla textures, 11 verified recipes.
     # Inline WEBP data URIs are supported by Android 0.5.1 and work offline.
-    from render_waystones import IDS as WAYSTONES_IDS, generate as build_waystones_cards
-    waystones_images = build_waystones_cards(output / "assets" / "crafting" / "waystones")
+    from render_waystones import IDS as WAYSTONES_IDS, generate_bilingual as build_waystones_cards
+    waystones_images, waystones_images_en = build_waystones_cards(
+        output / "assets" / "crafting" / "waystones",
+        output / "assets" / "crafting" / "waystones-en")
     waystones = next(article for article in items if article["id"] == "waystones")
     for key in WAYSTONES_IDS:
         marker = "@@WAYSTONES_CARD:" + key + "@@"
@@ -136,4 +143,98 @@ if not args.check:
         '</body></html>',
         encoding="utf-8"
     )
+
+    # Compatibility guarantee: original articles.json and manifest.json
+    # remain schema 1, byte-for-byte legacy-shaped for all older clients.
+    translations_path = here / "translations" / "en.json"
+    translations = json.loads(translations_path.read_text(encoding="utf-8"))
+    assert translations.get("schema") == 1
+    en_revision = translations.get("revision")
+    assert isinstance(en_revision, int) and en_revision > 0
+    translations_by_id = translations.get("articles", {})
+    assert isinstance(translations_by_id, dict)
+    assert set(translations_by_id).issubset(ids), "Translation for unknown article"
+    source_by_id = {x["id"]: x for x in source_articles}
+    en_articles = []
+    en_ids = set()
+
+    def insert_crafting_images(text, article_id):
+        if article_id == "backpacks":
+            for key in BACKPACK_IDS:
+                marker = "@@BACKPACK_CARD:" + key + "@@"
+                assert text.count(marker) == 1, "EN missing backpack image " + key
+                text = text.replace(marker, '<img class="recipe-image" src="' +
+                    backpack_images_en[key] + '" alt="Backpack crafting: ' + key.replace("_", " ") + '" />')
+        if article_id == "waystones":
+            for key in WAYSTONES_IDS:
+                marker = "@@WAYSTONES_CARD:" + key + "@@"
+                assert text.count(marker) == 1, "EN missing Waystones image " + key
+                text = text.replace(marker, '<img class="recipe-image" src="' +
+                    waystones_images_en[key] + '" alt="Waystones crafting: ' + key.replace("_", " ") + '" />')
+        if article_id == "cooking":
+            assert text.count("@@COOKING_IMAGE@@") == 1
+            svg = (here / "assets" / "crafting" / "culinary-cauldron.svg").read_text(encoding="utf-8")
+            captions = {
+                "Kociołek Kulinarny": "Culinary Cauldron",
+                "Pixelmon Cooking — przepis na blok": "Pixelmon Cooking — crafting recipe",
+                "Składniki": "Ingredients",
+                "sztabka miedzi": "Copper Ingot",
+                "sztabka żelaza": "Iron Ingot",
+                "blok żelaza": "Block of Iron",
+                "Rząd": "Row",
+                "pusty": "empty",
+                "Rezultat": "Result"
+            }
+            for pl, en in captions.items(): svg = svg.replace(pl, en)
+            image_uri = "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
+            text = text.replace("@@COOKING_IMAGE@@",
+                '<img class="recipe-image" src="' + image_uri + '" alt="Culinary Cauldron crafting recipe" />')
+        assert "@@BACKPACK_CARD:" not in text and "@@WAYSTONES_CARD:" not in text and "@@COOKING_IMAGE@@" not in text
+        return text
+
+    for src in source_articles:
+        item_id = src["id"]
+        tr = translations_by_id.get(item_id)
+        if tr is None:
+            # Missing translation: the new client uses the current Polish article.
+            continue
+        assert isinstance(tr, dict)
+        # If the PL source changes after translation, the EN entry is removed
+        # from publication until verified. No outdated rules are displayed as EN.
+        if tr.get("sourceUpdatedAt") != src.get("updatedAt"):
+            print(f"Translation needs review: {item_id}")
+            continue
+        for key in ("title", "summary", "search", "content"):
+            assert isinstance(tr.get(key), str) and tr[key], "Missing EN " + key + " in " + item_id
+        assert isinstance(tr.get("tags"), list) and all(isinstance(x, str) for x in tr["tags"])
+        en_content = insert_crafting_images(tr["content"], item_id)
+        assert len(en_content) < 1200000, "English article exceeds WebView size limit: " + item_id
+        en_article = {key: copy.deepcopy(src[key]) for key in ("id", "cat", "icon", "updatedAt")}
+        en_article.update({key: tr[key] for key in ("title", "summary", "search", "tags")})
+        en_article["content"] = en_content
+        en_articles.append(en_article)
+        en_ids.add(item_id)
+    assert en_articles, "At least one reviewed English article required"
+    en_downloads = []
+    en_download_overrides = translations.get("downloads", {})
+    assert isinstance(en_download_overrides, dict)
+    for download in data.get("downloads", []):
+        row = dict(download)
+        replacement = en_download_overrides.get(row["id"])
+        if replacement:
+            assert isinstance(replacement.get("title"), str) and isinstance(replacement.get("description"), str)
+            row.update(title=replacement["title"], description=replacement["description"])
+        en_downloads.append(row)
+    en_packet = {"schema": 2, "revision": en_revision, "articles": en_articles, "downloads": en_downloads}
+    en_bytes = (json.dumps(en_packet, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
+    (output / "articles.en.json").write_bytes(en_bytes)
+    v2_manifest = {
+        "schema": 2,
+        "languages": {
+            "pl": {"file": "articles.json", "revision": revision, "sha256": hashlib.sha256(raw).hexdigest()},
+            "en": {"file": "articles.en.json", "revision": en_revision, "sha256": hashlib.sha256(en_bytes).hexdigest()}
+        }
+    }
+    (output / "manifest-v2.json").write_text(json.dumps(v2_manifest, indent=2) + "\n", encoding="utf-8")
+    print(f"Bilingual feed: {len(en_articles)}/{len(items)} English translations, PL {revision}, EN {en_revision}")
     print("Ready to publish:", output)

@@ -63,6 +63,22 @@ MATERIALS = {
     "minecraft:netherite_ingot": ("Sztabka netherytu", "netherite_ingot"),
     "minecraft:netherite_upgrade_smithing_template": ("Szablon netherytowy", "netherite_upgrade_smithing_template"),
 }
+NAMES_EN = {"backpack":"Basic Backpack","copper_backpack":"Copper Backpack","iron_backpack":"Iron Backpack","iron_backpack_from_copper":"Iron from Copper Backpack","gold_backpack":"Gold Backpack","diamond_backpack":"Diamond Backpack","netherite_backpack":"Netherite Backpack"}
+MATERIALS_EN = {
+ "c:strings":"String","c:leathers":"Leather","c:chests/wooden":"Chest",
+ "c:ingots/copper":"Copper Ingot","c:ingots/iron":"Iron Ingot","c:ingots/gold":"Gold Ingot",
+ "c:gems/diamond":"Diamond","minecraft:netherite_ingot":"Netherite Ingot",
+ "minecraft:netherite_upgrade_smithing_template":"Netherite Upgrade",
+ "sophisticatedbackpacks:backpack":"Basic Backpack",
+ "sophisticatedbackpacks:copper_backpack":"Copper Backpack",
+ "sophisticatedbackpacks:iron_backpack":"Iron Backpack",
+ "sophisticatedbackpacks:gold_backpack":"Gold Backpack",
+ "sophisticatedbackpacks:diamond_backpack":"Diamond Backpack",
+ "sophisticatedbackpacks:netherite_backpack":"Netherite Backpack"
+}
+def label(item, lang):
+    return MATERIALS_EN.get(item, MATERIALS[item][0]) if lang=="en" else MATERIALS[item][0]
+
 for tier in ("backpack", "copper", "iron", "gold", "diamond", "netherite"):
     MATERIALS["sophisticatedbackpacks:" + ("backpack" if tier == "backpack" else tier + "_backpack")] = (
         {"backpack":"Podstawowy plecak", "copper":"Miedziany plecak", "iron":"Żelazny plecak",
@@ -208,7 +224,7 @@ def recipe_items(name, recipe):
     return [None if c==" " else recipe["key"][c].get("item",recipe["key"][c].get("tag"))
             for row in pattern for c in row]
 
-def card(name, recipe, items, icons):
+def card(name, recipe, items, icons, lang='pl'):
     img=Image.new("RGBA",(1200,720),COL["bg"]);d=ImageDraw.Draw(img)
     d.rounded_rectangle((19,18,1180,702),radius=30,fill=COL["edge"])
     d.rounded_rectangle((34,33,1165,687),radius=20,fill=COL["paper"])
@@ -216,16 +232,16 @@ def card(name, recipe, items, icons):
         f=font(size,bold)
         bb=d.textbbox((0,0),text,font=f)
         d.text(((1200-(bb[2]-bb[0]))//2,y),text,font=f,fill=COL["ink"])
-    centered(NAMES[name],65,43,True)
+    centered((NAMES_EN if lang=='en' else NAMES)[name],65,43,True)
     is_smith=name=="netherite_backpack"
-    centered("Stół kowalski — ulepszenie" if is_smith else "Stół craftingowy — 3 × 3",122,22)
+    centered(("Smithing Table — Upgrade" if is_smith else "Crafting Table — 3 × 3") if lang=="en" else ("Stół kowalski — ulepszenie" if is_smith else "Stół craftingowy — 3 × 3"),122,22)
     d.line((73,158,1127,158),fill=COL["shadow"],width=3)
     def panel(x,y,size):
         d.rounded_rectangle((x,y,x+size-8,y+size-8),radius=8,fill=COL["slot"],outline=COL["shadow"],width=3)
     if is_smith:
         for k,item in enumerate(items):
             x=106+k*126; panel(x,295,111); icon(img,icons,item,x+10,305,82)
-        for x,text in ((104,"Szablon"),(238,"Plecak"),(357,"Materiał")):
+        for x,text in (((104,"Template"),(238,"Backpack"),(357,"Material")) if lang=="en" else ((104,"Szablon"),(238,"Plecak"),(357,"Materiał"))):
             d.text((x,254),text,font=font(16),fill=COL["ink"])
     else:
         for k,item in enumerate(items):
@@ -235,34 +251,40 @@ def card(name, recipe, items, icons):
     d.polygon([(574,323),(655,323),(655,296),(730,351),(655,407),(655,380),(574,380)],fill=COL["arrow"])
     x,y=820,263;panel(x,y,184)
     result=recipe["result"]["id"];icon(img,icons,result,x+28,y+28,120)
-    label=MATERIALS[result][0]
-    bb=d.textbbox((0,0),label,font=font(21))
-    d.text((x+92-(bb[2]-bb[0])//2,y+188),label,font=font(21),fill=COL["ink"])
+    result_label=label(result,lang)
+    bb=d.textbbox((0,0),result_label,font=font(21))
+    d.text((x+92-(bb[2]-bb[0])//2,y+188),result_label,font=font(21),fill=COL["ink"])
     d.line((75,548,1125,548),fill=COL["shadow"],width=3)
-    d.text((85,567),"Składniki",font=font(27,True),fill=COL["ink"])
+    d.text((85,567),"Ingredients" if lang=="en" else "Składniki",font=font(27,True),fill=COL["ink"])
     counts=collections.OrderedDict()
     for item in items:
         if item:counts[item]=counts.get(item,0)+1
     for k,(item,count) in enumerate(counts.items()):
         x,y=96+(k%3)*359,614+(k//3)*41
         icon(img,icons,item,x,y-4,33)
-        t=MATERIALS[item][0]
+        t=label(item,lang)
         d.text((x+45,y-1),f"{count} × {t}" if count>1 else t,font=font(19),fill=COL["ink"])
     return img.convert("RGB")
 
-def generate(destination):
+def generate_bilingual(destination_pl, destination_en):
     models,textures,recipes=load_assets()
     icons=get_icons(models,textures)
-    destination=Path(destination);destination.mkdir(parents=True,exist_ok=True)
-    output={}
+    destinations=[Path(destination_pl),Path(destination_en)]
+    for destination in destinations: destination.mkdir(parents=True,exist_ok=True)
+    outputs=[{},{}]
     for name in IDS:
-        result=card(name,recipes[name],recipe_items(name,recipes[name]),icons)
-        filename=destination/(name+".png")
-        result.save(filename,optimize=True)
-        raw=filename.read_bytes()
-        output[name]="data:image/png;base64,"+base64.b64encode(raw).decode("ascii")
-        print(f"Rendered {name}: {len(raw)} bytes")
-    return output
+        items=recipe_items(name,recipes[name])
+        for i,lang in enumerate(("pl","en")):
+            result=card(name,recipes[name],items,icons,lang)
+            filename=destinations[i]/(name+".png")
+            result.save(filename,optimize=True)
+            raw=filename.read_bytes()
+            outputs[i][name]="data:image/png;base64,"+base64.b64encode(raw).decode("ascii")
+            print(f"Rendered {name} {lang}: {len(raw)} bytes")
+    return tuple(outputs)
+
+def generate(destination):
+    return generate_bilingual(destination,Path(destination).parent/"_en")[0]
 
 if __name__=="__main__":
     import sys

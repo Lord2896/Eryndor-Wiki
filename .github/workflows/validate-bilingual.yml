@@ -1,0 +1,53 @@
+name: Validate Eryndor Wiki PL-EN
+on:
+  push:
+    branches: [wiki-v0.6.0-pl-en]
+    paths:
+      - 'articles.json'
+      - 'translations/**'
+      - 'build_pages.py'
+      - 'render_backpacks.py'
+      - 'render_waystones.py'
+      - 'assets/**'
+      - '.github/workflows/validate-bilingual.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install image generator dependencies
+        run: python3 -m pip install 'Pillow>=10,<13' 'numpy>=1.26,<3'
+      - name: Validate legacy PL feed
+        run: python3 build_pages.py --check
+      - name: Validate Python syntax
+        run: python3 -m py_compile build_pages.py render_backpacks.py render_waystones.py
+      - name: Generate both language feeds and verify manifest
+        run: |
+          python3 build_pages.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,re
+          site=Path('_site')
+          legacy=json.loads((site/'manifest.json').read_text())
+          meta=json.loads((site/'manifest-v2.json').read_text())
+          assert legacy['schema']==1 and meta['schema']==2
+          assert legacy['revision']==meta['languages']['pl']['revision']
+          for locale,entry in meta['languages'].items():
+              blob=(site/entry['file']).read_bytes()
+              packet=json.loads(blob)
+              assert len(packet['articles'])==12, (locale,len(packet['articles']))
+              assert packet['revision']==entry['revision']
+              assert hashlib.sha256(blob).hexdigest()==entry['sha256']
+              ids={a['id'] for a in packet['articles']}
+              assert len(ids)==12
+              for a in packet['articles']:
+                  assert not re.search(r'@@(?:BACKPACK|WAYSTONES)_CARD:|@@COOKING_IMAGE@@',a['content'])
+                  for target in re.findall(r'data-go="([^"]+)"',a['content']):
+                      assert target in ids, (locale,a['id'],target)
+          assert meta['languages']['pl']['sha256']==legacy['sha256']
+          print("PL/EN: 12 articles each, matching SHA-256 and article links")
+          PY

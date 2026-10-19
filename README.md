@@ -74,3 +74,23 @@ Po zmianie katalogu lub artykułu:
 4. GitHub Actions opublikuje nowy plik danych; aplikacja 0.4 pobierze go przy następnym uruchomieniu.
 
 **Uwaga:** aplikacja 0.3 nie ma zakładki Pliki ani podpisów dat. Do korzystania z tych funkcji należy jednorazowo zainstalować APK 0.4; późniejsze zmiany artykułów i plików już nie wymagają instalacji nowego APK.
+
+## Eryndor Wiki v0.6.0 — dwa języki (gałąź testowa)
+
+Wersja 0.6.0 używa dwóch źródeł: obecny `articles.json` pozostaje kanoniczną wersją PL, a `translations/en.json` zawiera angielskie odpowiedniki artykułów. Klucze w `translations/en.json → articles` są niezmiennymi identyfikatorami (np. `mastery`, `cooking`).
+
+Generator `python3 build_pages.py` publikuje równocześnie:
+
+- `_site/articles.json` i `_site/manifest.json` — niezmienny interfejs schema 1 dla starszych aplikacji;
+- `_site/articles.en.json` i `_site/manifest-v2.json` — nowy strumień EN i hashe obu języków dla APK 0.6.0;
+- wbudowane w artykuły grafiki PNG/WebP/SVG z podpisami dla właściwego języka.
+
+**Zmiana polskiej treści:** zaktualizuj konkretny artykuł, jego `updatedAt` i globalne `revision` w `articles.json`. Tłumaczenie, którego `sourceUpdatedAt` nie odpowiada aktualnemu artykułowi PL, jest pomijane przez generator, a aplikacja pokazuje aktualny polski artykuł z komunikatem o braku tłumaczenia. Dzięki temu nie publikuje nieaktualnych zasad w EN.
+
+**Aktualizacja angielskiego artykułu:** edytuj jego pola `title`, `summary`, `tags`, `search` i pełne HTML `content` w `translations/en.json`. Po weryfikacji zgodności z PL ustaw `sourceUpdatedAt` na obecne `updatedAt` polskiego artykułu i zwiększ `translations/en.json → revision`. Nie zmieniaj `id`, `data-go`, `data-copy` ani znaczników grafik bez świadomej aktualizacji generatora.
+
+W tłumaczeniach pełnych artykułów zachowuj ukryte receptury Cooking i gatunki Atlasów jako nieujawnione. Nie zmieniaj zatwierdzonych przepisów, walut, kosztów, liczb, nazw Pokémonów, nazw przedmiotów ani komend. Dla Waystones nie modyfikuj zasad bez zatwierdzenia ostatecznej konfiguracji serwera.
+
+CI `.github/workflows/validate-bilingual.yml` sprawdza oba kanały, sumy SHA-256, linki oraz obecność ilustracji. Po ostatecznym zatwierdzeniu wersji testowej należy przenieść generator, tłumaczenia i workflow publikacji do `main`, a w workflow Androida wskazać publikowaną gałąź `main` przy następnych kompilacjach.
+
+**Ważne:** publikacja na GitHub Pages odbywa się z `main`. Sama praca w gałęzi `wiki-v0.6.0-pl-en` nie zmienia treści dostępnych dla użytkowników starszej aplikacji.
