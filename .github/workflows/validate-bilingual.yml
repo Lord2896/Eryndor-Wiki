@@ -45,8 +45,8 @@ jobs:
             'chronicles-story-4','chronicles-story-5','chronicles-story-6',
             'chronicles-peoples','chronicles-introduction','chronicles-trials'
           ]
-          assert len(pl_ids)==21 and pl_ids[-9:]==chronicle_ids, (len(pl_ids),pl_ids[-9:])
-          assert len(en_ids)==13, len(en_ids)
+          assert len(pl_ids)==22 and pl_ids[-10:-1]==chronicle_ids and pl_ids[-1]=='ascension', (len(pl_ids),pl_ids[-10:])
+          assert len(en_ids)==14 and 'ascension' in en_ids, len(en_ids)
           assert set(pl_ids)-en_ids==set(chronicle_ids[:-1]), "Unexpected missing English articles"
           for locale,entry in meta['languages'].items():
               blob=(site/entry['file']).read_bytes()
@@ -61,5 +61,5 @@ jobs:
                   for target in re.findall(r'data-go="([^"]+)"',a['content']):
                       assert target in pl_ids, (locale,a['id'],target)
           assert meta['languages']['pl']['sha256']==legacy['sha256']
-          print("21 Polish articles; 13 English articles; 8 full-length Chronicles use documented Polish fallback.")
+          print("22 Polish articles; 14 English articles; 8 full-length Chronicles use documented Polish fallback.")
           PY
