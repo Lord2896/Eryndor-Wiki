@@ -45,8 +45,8 @@ jobs:
             'chronicles-story-4','chronicles-story-5','chronicles-story-6',
             'chronicles-peoples','chronicles-introduction','chronicles-trials'
           ]
-          assert len(pl_ids)==24 and pl_ids[-12:-3]==chronicle_ids and pl_ids[-3:]==['ascension','trade-chain','auras'], (len(pl_ids),pl_ids[-12:])
-          assert len(en_ids)==16 and {'ascension','trade-chain','auras'}.issubset(en_ids), len(en_ids)
+          assert len(pl_ids)==25 and pl_ids[-13:-4]==chronicle_ids and pl_ids[-4:]==['ascension','trade-chain','auras','cosmetics'], (len(pl_ids),pl_ids[-13:])
+          assert len(en_ids)==17 and {'ascension','trade-chain','auras','cosmetics'}.issubset(en_ids), len(en_ids)
           assert set(pl_ids)-en_ids==set(chronicle_ids[:-1]), "Unexpected missing English articles"
           for locale,entry in meta['languages'].items():
               blob=(site/entry['file']).read_bytes()
@@ -61,5 +61,5 @@ jobs:
                   for target in re.findall(r'data-go="([^"]+)"',a['content']):
                       assert target in pl_ids, (locale,a['id'],target)
           assert meta['languages']['pl']['sha256']==legacy['sha256']
-          print("24 Polish articles; 16 English articles; 8 full-length Chronicles use documented Polish fallback.")
+          print("25 Polish articles; 17 English articles; 8 full-length Chronicles use documented Polish fallback.")
           PY
