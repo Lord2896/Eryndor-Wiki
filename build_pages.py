@@ -108,6 +108,35 @@ if not args.check:
     assert "@@WAYSTONES_CARD:" not in waystones["content"], "Unresolved Waystones recipe image"
     assert len(waystones["content"]) < 1200000, "Waystones article exceeds maximum image size"
     raw = (json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
+
+    # Eryndor Chronicles artwork: approved in-game-inspired illustrations.
+    # Images are embedded in the published JSON, so the Android reader
+    # retains them offline after its normal content update.
+    lore_specs = {
+        "chronicles-story-2": ("story-02-mines.webp", "Krasnoludy w niewoli w kopalni pod nadzorem elfow"),
+        "chronicles-story-3": ("story-03-forge.webp", "Entei rozpala Pierwsza Kuznie w gorach Khar-Durim"),
+    }
+    lore_source = here / "assets" / "lore"
+    lore_published = output / "assets" / "lore"
+    lore_published.mkdir(parents=True, exist_ok=True)
+    for article_id, (filename, alt_text) in lore_specs.items():
+        file_path = lore_source / filename
+        image_bytes = file_path.read_bytes()
+        assert image_bytes[:4] == b"RIFF" and image_bytes[8:12] == b"WEBP", "Invalid WEBP image: " + filename
+        assert 10000 < len(image_bytes) < 400000, "Unexpected Chronicle image size: " + filename
+        image_uri = "data:image/webp;base64," + base64.b64encode(image_bytes).decode("ascii")
+        marker = "@@LORE_IMAGE:" + article_id + "@@"
+        article = next(x for x in items if x["id"] == article_id)
+        assert article["content"].count(marker) == 1, "Missing or duplicated Chronicle image marker: " + article_id
+        replacement = ('<img src="' + image_uri +
+                       '" alt="' + alt_text +
+                       '" style="display:block;width:100%;height:auto;border-radius:9px" />')
+        article["content"] = article["content"].replace(marker, replacement)
+        assert len(article["content"]) < 1200000, "Chronicle image exceeds Android WebView size limit"
+        assert "@@LORE_IMAGE:" not in article["content"], "Unresolved Chronicle image placeholder"
+        shutil.copyfile(file_path, lore_published / filename)
+    raw = (json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
+
     (output / "articles.json").write_bytes(raw)
     # Ship approved, self-contained recipe art together with the JSON feed.
     # SVG is textual, with authentic item/model textures embedded as PNG data.

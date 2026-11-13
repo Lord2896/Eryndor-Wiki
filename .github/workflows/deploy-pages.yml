@@ -11,6 +11,7 @@ on:
       - 'build_pages.py'
       - 'render_backpacks.py'
       - 'render_waystones.py'
+      - 'assets/**'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 permissions:
