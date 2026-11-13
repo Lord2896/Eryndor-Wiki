@@ -63,6 +63,8 @@ jobs:
                       assert a['content'].count('<img class="recipe-image"') == 1, ('missing Android-compatible lore img',a['id'])
                       assert '<figure' not in a['content'], ('unsupported lore figure wrapper',a['id'])
                       assert '<p class="lore-image"' in a['content'], ('missing lore paragraph',a['id'])
+                      assert a['content'].startswith('<p><strong>'), ('missing bold lead sentence',a['id'])
+                      assert not re.search(r'<figcaption|<p[^>]*>\s*<em>',a['content']), ('unexpected artwork caption',a['id'])
                       assert len(a['content']) < 350000, ('Lore exceeds Android legacy article limit',a['id'])
                   for target in re.findall(r'data-go="([^"]+)"',a['content']):
                       assert target in pl_ids, (locale,a['id'],target)
