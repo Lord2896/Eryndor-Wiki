@@ -128,9 +128,9 @@ if not args.check:
         marker = "@@LORE_IMAGE:" + article_id + "@@"
         article = next(x for x in items if x["id"] == article_id)
         assert article["content"].count(marker) == 1, "Missing or duplicated Chronicle image marker: " + article_id
-        replacement = ('<img src="' + image_uri +
+        replacement = ('<img class="recipe-image" src="' + image_uri +
                        '" alt="' + alt_text +
-                       '" style="display:block;width:100%;height:auto;border-radius:9px" />')
+                       '" style="display:block;width:100%;max-width:100%;height:auto;border-radius:9px" />')
         article["content"] = article["content"].replace(marker, replacement)
         assert len(article["content"]) < 1200000, "Chronicle image exceeds Android WebView size limit"
         assert "@@LORE_IMAGE:" not in article["content"], "Unresolved Chronicle image placeholder"
