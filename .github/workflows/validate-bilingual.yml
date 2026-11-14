@@ -58,7 +58,7 @@ jobs:
               assert ids.issubset(set(pl_ids)), (locale,ids-set(pl_ids))
               for a in packet['articles']:
                   assert not re.search(r'@@(?:BACKPACK|WAYSTONES)_CARD:|@@COOKING_IMAGE@@|@@LORE_IMAGE:',a['content'])
-                  if locale == 'pl' and a['id'] in ('chronicles-story-2','chronicles-story-3'):
+                  if locale == 'pl' and a['id'] in ('chronicles-story-1','chronicles-story-2','chronicles-story-3','chronicles-story-4','chronicles-story-5','chronicles-story-6'):
                       assert a['content'].count('data:image/webp;base64,') == 1, ('missing lore illustration',a['id'])
                       assert a['content'].count('<img class="recipe-image"') == 1, ('missing Android-compatible lore img',a['id'])
                       assert '<figure' not in a['content'], ('unsupported lore figure wrapper',a['id'])
