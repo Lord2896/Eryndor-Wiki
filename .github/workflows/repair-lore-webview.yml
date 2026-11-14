@@ -73,15 +73,6 @@ jobs:
           else:
               assert safe in code, 'Unexpected article size check in build_pages.py'
 
-          validatepath = Path('.github/workflows/validate-bilingual.yml')
-          checks = validatepath.read_text(encoding='utf-8')
-          original = "a['id'] in ('chronicles-story-2','chronicles-story-3')"
-          updated = "a['id'] in ('chronicles-story-2','chronicles-story-3','chronicles-story-5','chronicles-story-6')"
-          if original in checks:
-              validatepath.write_text(checks.replace(original, updated), encoding='utf-8')
-          else:
-              assert updated in checks, 'Unexpected Chronicle validation rule'
-
           articlespath = Path('articles.json')
           data = articlespath.read_text(encoding='utf-8')
           match = re.search(r'("revision"\s*:\s*)(\d+)', data)
@@ -120,7 +111,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/lore/story-05-citadel.webp assets/lore/story-06-homecoming.webp build_pages.py articles.json .github/workflows/validate-bilingual.yml
+          git add assets/lore/story-05-citadel.webp assets/lore/story-06-homecoming.webp build_pages.py articles.json
           if ! git diff --cached --quiet; then
             git commit -m "Wiki v41: optimize approved Chronicle artwork for offline Android"
             git push origin HEAD:main
