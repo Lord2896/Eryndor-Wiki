@@ -1,7 +1,7 @@
 name: Validate Eryndor Wiki PL-EN
 on:
   push:
-    branches: [wiki-v0.6.0-pl-en, wiki-kroniki-2026-10-19, main]
+    branches: [wiki-v0.6.0-pl-en, wiki-kroniki-2026-10-19, wiki-v42-chronicles-1-4-artwork, main]
     paths:
       - 'articles.json'
       - 'translations/**'
