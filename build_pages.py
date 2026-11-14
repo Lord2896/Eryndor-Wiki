@@ -134,7 +134,7 @@ if not args.check:
                        '" alt="' + alt_text +
                        '" style="display:block;width:100%;max-width:100%;height:auto;border-radius:9px" />')
         article["content"] = article["content"].replace(marker, replacement)
-        assert len(article["content"]) < 1200000, "Chronicle image exceeds Android WebView size limit"
+        assert len(article["content"]) < 350000, "Chronicle image exceeds Android WebView size limit"
         assert "@@LORE_IMAGE:" not in article["content"], "Unresolved Chronicle image placeholder"
         shutil.copyfile(file_path, lore_published / filename)
     raw = (json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
