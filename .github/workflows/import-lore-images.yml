@@ -1,0 +1,58 @@
+name: Import approved Chronicle illustrations
+on:
+  push:
+    branches: [wiki-v40-lore-images-staging]
+    paths:
+      - 'assets/lore/incoming/story-05-citadel.png'
+      - 'assets/lore/incoming/story-06-homecoming.png'
+      - '.github/workflows/import-lore-images.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: wiki-v40-lore-images-staging
+      - name: Install Pillow
+        run: python3 -m pip install 'Pillow>=10,<13'
+      - name: Convert approved PNG images to offline WEBP
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageOps
+          root = Path('assets/lore')
+          names = ('story-05-citadel', 'story-06-homecoming')
+          for name in names:
+              source = root / 'incoming' / (name + '.png')
+              dest = root / (name + '.webp')
+              if not source.exists():
+                  print('Not uploaded yet:', source)
+                  continue
+              with Image.open(source) as im:
+                  im = ImageOps.exif_transpose(im).convert('RGB')
+                  width, height = im.size
+                  assert width >= 1024 and height >= 512, f'Image too small: {source}'
+                  assert abs(width / height - 16 / 9) < 0.16, f'Expected approx 16:9: {source}'
+                  for quality in (85, 78, 70, 62, 55, 48, 40, 33):
+                      im.save(dest, format='WEBP', quality=quality, method=6)
+                      if dest.stat().st_size < 390000:
+                          break
+                  assert 10000 < dest.stat().st_size < 400000, f'Invalid output size: {dest}'
+                  print(f'Prepared {dest}: {dest.stat().st_size} bytes')
+          PY
+      - name: Commit processed images
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/lore/story-05-citadel.webp assets/lore/story-06-homecoming.webp || true
+          if git diff --cached --quiet; then
+            echo "No new processed images to commit"
+          else
+            git commit -m "assets(lore): import approved Chronicle V and VI artwork"
+            git push origin HEAD:wiki-v40-lore-images-staging
+          fi
