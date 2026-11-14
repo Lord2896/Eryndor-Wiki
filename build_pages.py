@@ -113,8 +113,10 @@ if not args.check:
     # Images are embedded in the published JSON, so the Android reader
     # retains them offline after its normal content update.
     lore_specs = {
+        "chronicles-story-1": ("story-01-archipelago.webp", "Naturalna panorama trzech wysp Eryndoru: Khar-Durim, Valoria i Sah-Rava"),
         "chronicles-story-2": ("story-02-mines.webp", "Krasnoludy w niewoli w kopalni pod nadzorem elfow"),
         "chronicles-story-3": ("story-03-forge.webp", "Entei rozpala Pierwsza Kuznie w gorach Khar-Durim"),
+        "chronicles-story-4": ("story-04-ravine-battle.webp", "Krasnoludy walcza z elfami w skalistym wawozie podczas powstania Khar-Durim"),
         "chronicles-story-5": ("story-05-citadel.webp", "Krasnoludzka armia szturmuje elficka Cytadele na Sah-Ravie"),
         "chronicles-story-6": ("story-06-homecoming.webp", "Krasnoludy wchodza na okret, obserwowane przez ukrytych jaszczuroludzi"),
     }
