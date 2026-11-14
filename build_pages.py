@@ -115,6 +115,8 @@ if not args.check:
     lore_specs = {
         "chronicles-story-2": ("story-02-mines.webp", "Krasnoludy w niewoli w kopalni pod nadzorem elfow"),
         "chronicles-story-3": ("story-03-forge.webp", "Entei rozpala Pierwsza Kuznie w gorach Khar-Durim"),
+        "chronicles-story-5": ("story-05-citadel.webp", "Krasnoludzka armia szturmuje elficka Cytadele na Sah-Ravie"),
+        "chronicles-story-6": ("story-06-homecoming.webp", "Krasnoludy wchodza na okret, obserwowane przez ukrytych jaszczuroludzi"),
     }
     lore_source = here / "assets" / "lore"
     lore_published = output / "assets" / "lore"

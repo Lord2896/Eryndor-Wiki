@@ -1,0 +1,64 @@
+name: Import approved Chronicle illustrations
+on:
+  push:
+    branches: [wiki-v40-lore-images-staging]
+    paths:
+      - '.github/workflows/import-lore-images.yml'
+      - 'Oblężenie elfickiej cytadeli o zachodzie słońca.png'
+      - 'Zachód słońca i tajni obserwatorzy.png'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: wiki-v40-lore-images-staging
+      - name: Install Pillow
+        run: python3 -m pip install 'Pillow>=10,<13'
+      - name: Convert approved images and validate
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageOps
+          sources = {
+              "story-05-citadel": Path("Oblężenie elfickiej cytadeli o zachodzie słońca.png"),
+              "story-06-homecoming": Path("Zachód słońca i tajni obserwatorzy.png")
+          }
+          output = Path("assets/lore")
+          output.mkdir(parents=True, exist_ok=True)
+          for name, source in sources.items():
+              if not source.is_file():
+                  raise FileNotFoundError(f"Missing approved artwork: {source}")
+              dest = output / (name + ".webp")
+              with Image.open(source) as im:
+                  im = ImageOps.exif_transpose(im).convert("RGB")
+                  width, height = im.size
+                  print(f"{source}: {width}x{height}")
+                  assert width >= 1024 and height >= 512, f"Image too small: {source}"
+                  ratio = width / height
+                  assert abs(ratio - 16/9) < 0.05, f"Expected 16:9, got {ratio:.3f}: {source}"
+                  for quality in (82, 74, 66, 58, 50, 42, 34, 26):
+                      im.save(dest, format="WEBP", quality=quality, method=6)
+                      if dest.stat().st_size < 390000:
+                          break
+                  assert 10000 < dest.stat().st_size < 400000, f"Invalid output size: {dest}"
+                  with Image.open(dest) as verify:
+                      assert verify.format == "WEBP" and verify.size == (width, height)
+                  print(f"Prepared {dest}: {dest.stat().st_size} bytes")
+          PY
+      - name: Commit verified WebP images
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/lore/story-05-citadel.webp assets/lore/story-06-homecoming.webp
+          if git diff --cached --quiet; then
+            echo "Images already up to date"
+          else
+            git commit -m "assets(lore): import approved Chronicle V and VI artwork"
+            git push origin HEAD:wiki-v40-lore-images-staging
+          fi
