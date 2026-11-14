@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
   repair:
@@ -61,22 +63,25 @@ jobs:
           code = codepath.read_text(encoding='utf-8')
           old = 'assert len(article["content"]) < 1200000, "Chronicle image exceeds Android WebView size limit"'
           new = 'assert len(article["content"]) < 350000, "Chronicle image exceeds Android WebView size limit"'
-          assert code.count(old) == 1, 'Unexpected Chronicle limit or already modified'
-          codepath.write_text(code.replace(old, new, 1), encoding='utf-8')
+          assert code.count(old) == 1 or code.count(new) == 1, 'Unexpected Chronicle limit'
+          if old in code:
+              codepath.write_text(code.replace(old, new, 1), encoding='utf-8')
 
           checkpath = Path('.github/workflows/validate-bilingual.yml')
           checks = checkpath.read_text(encoding='utf-8')
           old = "a['id'] in ('chronicles-story-2','chronicles-story-3')"
           new = "a['id'] in ('chronicles-story-2','chronicles-story-3','chronicles-story-5','chronicles-story-6')"
-          assert checks.count(old) == 1, 'Unexpected lore validator'
-          checkpath.write_text(checks.replace(old, new, 1), encoding='utf-8')
+          assert checks.count(old) == 1 or checks.count(new) == 1, 'Unexpected lore validator'
+          if old in checks:
+              checkpath.write_text(checks.replace(old, new, 1), encoding='utf-8')
 
           articlespath = Path('articles.json')
           article_text = articlespath.read_text(encoding='utf-8')
           token_old = '"revision": 40,'
           token_new = '"revision": 41,'
-          assert article_text.count(token_old) == 1, 'Unexpected revision'
-          articlespath.write_text(article_text.replace(token_old, token_new, 1), encoding='utf-8')
+          assert article_text.count(token_old) == 1 or article_text.count(token_new) == 1, 'Unexpected revision'
+          if token_old in article_text:
+              articlespath.write_text(article_text.replace(token_old, token_new, 1), encoding='utf-8')
           print('Revision advanced to 41. Original text and selected illustrations preserved.')
           PY
       - name: Validate generated offline articles
@@ -104,5 +109,37 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/lore/story-05-citadel.webp assets/lore/story-06-homecoming.webp build_pages.py articles.json .github/workflows/validate-bilingual.yml
           git diff --cached --stat
-          git commit -m "Wiki v41: fix broken offline Chronicle V and VI illustrations"
-          git push origin HEAD:main
+          if git diff --cached --quiet; then
+            echo "Repair already committed; proceeding to deploy"
+          else
+            git commit -m "Wiki v41: fix broken offline Chronicle V and VI illustrations"
+            git push origin HEAD:main
+          fi
+
+  publish:
+    needs: repair
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Install image renderer dependencies
+        run: python3 -m pip install 'Pillow>=10,<13' 'numpy>=1.26,<3'
+      - name: Build validated offline wiki feed
+        run: python3 build_pages.py
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+          name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Publish GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
