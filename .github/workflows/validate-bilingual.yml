@@ -12,7 +12,7 @@ on:
       - '.github/workflows/validate-bilingual.yml'
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -71,3 +71,34 @@ jobs:
           assert meta['languages']['pl']['sha256']==legacy['sha256']
           print("26 Polish articles; 18 English articles; 8 full-length Chronicles use documented Polish fallback.")
           PY
+
+      - name: Record successful v42 prepublication smoke test
+        if: github.ref == 'refs/heads/wiki-v42-chronicles-1-4-artwork'
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib,json,base64,re
+          from PIL import Image
+          info={}
+          for num, filename in [(1,'story-01-archipelago.webp'),(4,'story-04-ravine-battle.webp')]:
+              path=Path('assets/lore')/filename
+              binary=path.read_bytes()
+              with Image.open(path) as im:
+                  im.load()
+                  assert im.format=='WEBP'
+                  dims=im.size
+              blob=json.loads(Path('_site/articles.json').read_text())
+              a=next(a for a in blob['articles'] if a['id']==f'chronicles-story-{num}')
+              im_b64=re.findall(r'data:image/webp;base64,([A-Za-z0-9+/=]+)',a['content'])
+              assert len(im_b64)==1 and base64.b64decode(im_b64[0])==binary
+              assert len(a['content'])<350000
+              info[filename]={'sha256':hashlib.sha256(binary).hexdigest(),'dimensions':list(dims)}
+          assert blob['revision']==42
+          Path('.github/v42-image-validation.json').write_text(json.dumps({'revision':42,'images':info},indent=2)+'\n')
+          print('Validated and documented Chronicle I and IV embedded images')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/v42-image-validation.json
+          git commit -m "test: record v42 Chronicle artwork validation"
+          git push origin HEAD:wiki-v42-chronicles-1-4-artwork
