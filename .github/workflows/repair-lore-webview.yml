@@ -11,134 +11,132 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
-  repair:
+  repair-and-publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: main
-      - name: Install image tooling
-        run: python3 -m pip install 'Pillow>=10,<13' 'numpy>=1.26,<3'
-      - name: Recompress WebP and restore Android-safe article limit
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          from io import BytesIO
-          from PIL import Image, ImageOps
-          import json
-          root = Path('assets/lore')
-          names = ['story-05-citadel.webp', 'story-06-homecoming.webp']
-          for name in names:
-              path = root / name
-              assert path.is_file(), f'Missing approved illustration: {path}'
-              with Image.open(path) as opened:
-                  original = ImageOps.exif_transpose(opened).convert('RGB')
-              print(f'{name}: before={path.stat().st_size} bytes, size={original.size}', flush=True)
-              chosen = None
-              for cap_width in (1440, 1280, 1152, 1024, 896):
-                  scale = min(1.0, cap_width / original.width)
-                  dim = (max(1, round(original.width * scale)), max(1, round(original.height * scale)))
-                  im = original if dim == original.size else original.resize(dim, Image.Resampling.LANCZOS)
-                  for quality in (76, 68, 60, 52, 44, 36, 28, 22):
-                      out = BytesIO()
-                      im.save(out, format='WEBP', quality=quality, method=6)
-                      data = out.getvalue()
-                      if len(data) <= 125000:
-                          chosen = (data, dim, quality)
-                          break
-                  if chosen:
-                      break
-              assert chosen, f'Cannot compress {name} to safe WebView size'
-              data, dimensions, quality = chosen
-              assert 20000 < len(data) < 130000
-              with Image.open(BytesIO(data)) as verify:
-                  verify.load()
-                  assert verify.format == 'WEBP' and verify.size == dimensions
-              path.write_bytes(data)
-              print(f'{name}: after={len(data)} bytes, size={dimensions}, quality={quality}', flush=True)
-
-          codepath = Path('build_pages.py')
-          code = codepath.read_text(encoding='utf-8')
-          old = 'assert len(article["content"]) < 1200000, "Chronicle image exceeds Android WebView size limit"'
-          new = 'assert len(article["content"]) < 350000, "Chronicle image exceeds Android WebView size limit"'
-          assert code.count(old) == 1 or code.count(new) == 1, 'Unexpected Chronicle limit'
-          if old in code:
-              codepath.write_text(code.replace(old, new, 1), encoding='utf-8')
-
-          checkpath = Path('.github/workflows/validate-bilingual.yml')
-          checks = checkpath.read_text(encoding='utf-8')
-          old = "a['id'] in ('chronicles-story-2','chronicles-story-3')"
-          new = "a['id'] in ('chronicles-story-2','chronicles-story-3','chronicles-story-5','chronicles-story-6')"
-          assert checks.count(old) == 1 or checks.count(new) == 1, 'Unexpected lore validator'
-          if old in checks:
-              checkpath.write_text(checks.replace(old, new, 1), encoding='utf-8')
-
-          articlespath = Path('articles.json')
-          article_text = articlespath.read_text(encoding='utf-8')
-          token_old = '"revision": 40,'
-          token_new = '"revision": 41,'
-          assert article_text.count(token_old) == 1 or article_text.count(token_new) == 1, 'Unexpected revision'
-          if token_old in article_text:
-              articlespath.write_text(article_text.replace(token_old, token_new, 1), encoding='utf-8')
-          print('Revision advanced to 41. Original text and selected illustrations preserved.')
-          PY
-      - name: Validate generated offline articles
-        run: |
-          python3 build_pages.py
-          python3 - <<'PY'
-          import json,re,base64
-          from pathlib import Path
-          packet=json.loads(Path('_site/articles.json').read_text(encoding='utf-8'))
-          assert packet['revision']==41
-          for article in packet['articles']:
-              if article['id'] not in ('chronicles-story-2','chronicles-story-3','chronicles-story-5','chronicles-story-6'):
-                  continue
-              content=article['content']
-              found=re.findall(r'data:image/webp;base64,([A-Za-z0-9+/=]+)', content)
-              assert len(found)==1, f'Expected one embedded image: {article["id"]}'
-              decoded=base64.b64decode(found[0], validate=True)
-              assert decoded[:4]==b'RIFF' and decoded[8:12]==b'WEBP'
-              assert len(content)<350000, (article['id'],len(content))
-              print(article['id'], 'article characters',len(content),'WebP bytes',len(decoded))
-          PY
-      - name: Commit tested repair
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/lore/story-05-citadel.webp assets/lore/story-06-homecoming.webp build_pages.py articles.json .github/workflows/validate-bilingual.yml
-          git diff --cached --stat
-          if git diff --cached --quiet; then
-            echo "Repair already committed; proceeding to deploy"
-          else
-            git commit -m "Wiki v41: fix broken offline Chronicle V and VI illustrations"
-            git push origin HEAD:main
-          fi
-
-  publish:
-    needs: repair
-    runs-on: ubuntu-latest
+    timeout-minutes: 30
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out current Wiki
+        uses: actions/checkout@v4
         with:
           ref: main
-      - name: Install image renderer dependencies
+          persist-credentials: true
+      - name: Install image dependencies
         run: python3 -m pip install 'Pillow>=10,<13' 'numpy>=1.26,<3'
-      - name: Build validated offline wiki feed
-        run: python3 build_pages.py
-      - uses: actions/configure-pages@v5
+      - name: Optimize images and update Wiki to v41
+        run: |
+          python3 - <<'PY'
+          from io import BytesIO
+          from pathlib import Path
+          from PIL import Image, ImageOps
+          import re
+
+          for filename in ('story-05-citadel.webp', 'story-06-homecoming.webp'):
+              path = Path('assets/lore') / filename
+              if not path.is_file():
+                  raise FileNotFoundError(f'Missing approved image: {path}')
+              with Image.open(path) as src:
+                  im = ImageOps.exif_transpose(src).convert('RGB')
+              original_size = im.size
+              if im.width > 960:
+                  h = round(im.height * 960 / im.width)
+                  im = im.resize((960, h), Image.Resampling.LANCZOS)
+              assert abs(im.width / im.height - 16/9) < 0.08, (filename, im.size)
+              encoded = None
+              for quality in (60, 50, 40, 30, 20):
+                  out = BytesIO()
+                  im.save(out, format='WEBP', quality=quality, method=4)
+                  if out.tell() <= 105000:
+                      encoded = out.getvalue()
+                      break
+              if encoded is None:
+                  raise RuntimeError(f'Could not reduce {filename} to <=105KB')
+              with Image.open(BytesIO(encoded)) as verify:
+                  verify.load()
+                  assert verify.format == 'WEBP' and verify.size == im.size
+              path.write_bytes(encoded)
+              print(f'{filename}: {original_size} => {im.size}, {len(encoded)} bytes', flush=True)
+
+          codepath = Path('build_pages.py')
+          code = codepath.read_text(encoding='utf-8')
+          original = 'assert len(article["content"]) < 1200000, "Chronicle image exceeds Android WebView size limit"'
+          safe = 'assert len(article["content"]) < 350000, "Chronicle image exceeds Android WebView size limit"'
+          if original in code:
+              codepath.write_text(code.replace(original, safe), encoding='utf-8')
+          else:
+              assert safe in code, 'Unexpected article size check in build_pages.py'
+
+          validatepath = Path('.github/workflows/validate-bilingual.yml')
+          checks = validatepath.read_text(encoding='utf-8')
+          original = "a['id'] in ('chronicles-story-2','chronicles-story-3')"
+          updated = "a['id'] in ('chronicles-story-2','chronicles-story-3','chronicles-story-5','chronicles-story-6')"
+          if original in checks:
+              validatepath.write_text(checks.replace(original, updated), encoding='utf-8')
+          else:
+              assert updated in checks, 'Unexpected Chronicle validation rule'
+
+          articlespath = Path('articles.json')
+          data = articlespath.read_text(encoding='utf-8')
+          match = re.search(r'("revision"\s*:\s*)(\d+)', data)
+          assert match, 'No revision found'
+          current = int(match.group(2))
+          if current == 40:
+              data = data[:match.start(2)] + '41' + data[match.end(2):]
+              articlespath.write_text(data, encoding='utf-8')
+          else:
+              assert current == 41, f'Unexpected wiki revision {current}'
+          print('Wiki revision:', 41, flush=True)
+          PY
+      - name: Build and verify all offline article images
+        run: |
+          python3 build_pages.py
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          from io import BytesIO
+          import base64,json,re
+          packet=json.loads(Path('_site/articles.json').read_text(encoding='utf-8'))
+          assert packet['revision']==41
+          for item in packet['articles']:
+              if item['id'] not in ('chronicles-story-2','chronicles-story-3','chronicles-story-5','chronicles-story-6'):
+                  continue
+              images=re.findall(r'data:image/webp;base64,([A-Za-z0-9+/=]+)', item['content'])
+              assert len(images)==1, f'Wrong image count for {item["id"]}'
+              decoded=base64.b64decode(images[0],validate=True)
+              with Image.open(BytesIO(decoded)) as picture:
+                  picture.load()
+                  assert picture.format=='WEBP'
+              assert len(item['content'])<350000, (item['id'],len(item['content']))
+              print(item['id'],len(decoded),'bytes',flush=True)
+          PY
+      - name: Commit tested v41 update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/lore/story-05-citadel.webp assets/lore/story-06-homecoming.webp build_pages.py articles.json .github/workflows/validate-bilingual.yml
+          if ! git diff --cached --quiet; then
+            git commit -m "Wiki v41: optimize approved Chronicle artwork for offline Android"
+            git push origin HEAD:main
+          else
+            echo "Wiki v41 already committed"
+          fi
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
         with:
           enablement: true
-      - name: Upload site artifact
+      - name: Upload verified site
         uses: actions/upload-pages-artifact@v3
         with:
           path: '_site'
           name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
-      - name: Publish GitHub Pages
+      - name: Publish verified Wiki
         id: deployment
         uses: actions/deploy-pages@v4
         with:
