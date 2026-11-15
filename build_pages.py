@@ -142,6 +142,41 @@ if not args.check:
         assert len(article["content"]) < 350000, "Chronicle image exceeds Android WebView size limit"
         assert "@@LORE_IMAGE:" not in article["content"], "Unresolved Chronicle image placeholder"
         shutil.copyfile(file_path, lore_published / filename)
+
+    # Eryndor mechanic screenshots: embed original in-game UI/screenshots in
+    # articles rather than showing decorative images at the article top.
+    # Self-contained WebP images work offline in older Android WebViews.
+    mechanic_specs = {
+        "rifts-shiny": ("rifts", "rifts-shiny.webp", "Jasny krajobraz Shiny Riftu", "Bright landscape of Shiny Rift"),
+        "rifts-treasure": ("rifts", "rifts-treasure.webp", "Mroczny krajobraz Treasure Riftu", "Dark landscape of Treasure Rift"),
+        "ascension-party": ("ascension", "ascension-party.webp", "Wybór Pokémona do Przebudzenia", "Choosing a Pokemon for Awakening"),
+        "ascension-moves": ("ascension", "ascension-moves.webp", "Lista ruchów w panelu Przebudzenia", "Awakening move selection screen"),
+        "ascension-relics": ("ascension", "ascension-relics.webp", "Przedmioty potrzebne do Reliktu Przebudzenia", "Items used in the Awakening Relic"),
+        "expeditions-list": ("expeditions", "expeditions-list.webp", "Lista dostępnych ekspedycji", "List of available expeditions"),
+        "expeditions-detail": ("expeditions", "expeditions-detail.webp", "Wymagania oraz nagrody wybranej ekspedycji", "Expedition requirements and rewards"),
+    }
+    mechanic_image_uris = {}
+    screenshot_published = output / "assets" / "screenshots"
+    screenshot_published.mkdir(parents=True, exist_ok=True)
+    for name, (article_id, filename, alt_pl, alt_en) in mechanic_specs.items():
+        src = here / "assets" / "screenshots" / filename
+        image_bytes = src.read_bytes()
+        assert image_bytes[:4] == b"RIFF" and image_bytes[8:12] == b"WEBP", "Invalid mechanic screenshot: " + filename
+        assert 10000 < len(image_bytes) < 115000, "Mechanic screenshot exceeds Android budget: " + filename
+        mechanic_image_uris[name] = "data:image/webp;base64," + base64.b64encode(image_bytes).decode("ascii")
+        article = next(item for item in items if item["id"] == article_id)
+        marker = "@@MECH_IMAGE:" + name + "@@"
+        assert article["content"].count(marker) == 1, "Missing mechanic screenshot marker: " + marker
+        tag = ('<img class="recipe-image" src="' + mechanic_image_uris[name] +
+               '" alt="' + alt_pl +
+               '" style="display:block;width:100%;max-width:100%;height:auto;border-radius:9px" />')
+        article["content"] = article["content"].replace(marker, tag)
+        shutil.copyfile(src, screenshot_published / filename)
+    for mechanic_article_id in ("rifts", "expeditions", "ascension"):
+        item = next(a for a in items if a["id"] == mechanic_article_id)
+        assert "@@MECH_IMAGE:" not in item["content"], "Unresolved mechanic image placeholder"
+        assert len(item["content"]) < 350000, "Mechanic article exceeds Android WebView limit"
+
     raw = (json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n").encode("utf-8")
 
     (output / "articles.json").write_bytes(raw)
@@ -237,6 +272,20 @@ if not args.check:
                 '" alt="A scenic Trial Path through the lands of Eryndor" style="display:block;width:100%;max-width:100%;height:auto;border-radius:9px" />')
             assert len(text) < 350000, "EN Trials image exceeds Android WebView safe limit"
         assert "@@LORE_IMAGE:" not in text, "EN unresolved lore image"
+
+        if article_id in ("rifts", "expeditions", "ascension"):
+            for name, (target_id, filename, alt_pl, alt_en) in mechanic_specs.items():
+                if target_id != article_id:
+                    continue
+                marker = "@@MECH_IMAGE:" + name + "@@"
+                assert text.count(marker) == 1, "Missing EN mechanic screenshot: " + marker
+                tag = ('<img class="recipe-image" src="' + mechanic_image_uris[name] +
+                       '" alt="' + alt_en +
+                       '" style="display:block;width:100%;max-width:100%;height:auto;border-radius:9px" />')
+                text = text.replace(marker, tag)
+            assert len(text) < 350000, "EN mechanic article exceeds Android WebView limit"
+        assert "@@MECH_IMAGE:" not in text, "Unresolved EN mechanic screenshot"
+
         assert "@@BACKPACK_CARD:" not in text and "@@WAYSTONES_CARD:" not in text and "@@COOKING_IMAGE@@" not in text
         return text
 
