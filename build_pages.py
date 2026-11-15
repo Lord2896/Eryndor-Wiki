@@ -119,6 +119,9 @@ if not args.check:
         "chronicles-story-4": ("story-04-ravine-battle.webp", "Krasnoludy walcza z elfami w skalistym wawozie podczas powstania Khar-Durim"),
         "chronicles-story-5": ("story-05-citadel.webp", "Krasnoludzka armia szturmuje elficka Cytadele na Sah-Ravie"),
         "chronicles-story-6": ("story-06-homecoming.webp", "Krasnoludy wchodza na okret, obserwowane przez ukrytych jaszczuroludzi"),
+        "chronicles-introduction": ("chronicles-introduction.webp", "Statek wplywa do archipelagu Eryndoru o zachodzie slonca"),
+        "chronicles-peoples": ("chronicles-peoples.webp", "Trzy ludy Eryndoru: krasnoludy, ludzie i elfy"),
+        "chronicles-trials": ("chronicles-trials.webp", "Szlak Prob prowadzacy przez roznorodne krainy Eryndoru"),
     }
     lore_source = here / "assets" / "lore"
     lore_published = output / "assets" / "lore"
@@ -222,6 +225,18 @@ if not args.check:
             image_uri = "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
             text = text.replace("@@COOKING_IMAGE@@",
                 '<img class="recipe-image" src="' + image_uri + '" alt="Culinary Cauldron crafting recipe" />')
+        if article_id == "chronicles-trials":
+            filename = "chronicles-trials.webp"
+            image_bytes = (here / "assets" / "lore" / filename).read_bytes()
+            assert image_bytes[:4] == b"RIFF" and image_bytes[8:12] == b"WEBP", "Invalid EN Trials image"
+            assert 10000 < len(image_bytes) < 110000, "EN Trials image must be Android-safe"
+            marker = "@@LORE_IMAGE:chronicles-trials@@"
+            assert text.count(marker) == 1, "Expected one EN Trials image marker"
+            image_uri = "data:image/webp;base64," + base64.b64encode(image_bytes).decode("ascii")
+            text = text.replace(marker, '<img class="recipe-image" src="' + image_uri +
+                '" alt="A scenic Trial Path through the lands of Eryndor" style="display:block;width:100%;max-width:100%;height:auto;border-radius:9px" />')
+            assert len(text) < 350000, "EN Trials image exceeds Android WebView safe limit"
+        assert "@@LORE_IMAGE:" not in text, "EN unresolved lore image"
         assert "@@BACKPACK_CARD:" not in text and "@@WAYSTONES_CARD:" not in text and "@@COOKING_IMAGE@@" not in text
         return text
 

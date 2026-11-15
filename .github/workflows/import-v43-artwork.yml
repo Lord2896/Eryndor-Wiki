@@ -1,0 +1,104 @@
+name: Prepare approved Wiki v43 illustrations
+on:
+  push:
+    branches: [wiki-v43-lore-panels]
+    paths:
+      - 'Pierwsze spojrzenie na Eryndor.png'
+      - 'Tryptyk krain Ludy Eryndoru.png'
+      - 'Szlak ku Górskiej Twierdzy.png'
+      - '.github/workflows/import-v43-artwork.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki-v43-approved-artwork
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: wiki-v43-lore-panels
+      - name: Install image and article validators
+        run: python3 -m pip install 'Pillow>=10,<13' 'numpy>=1.26,<3'
+      - name: Convert and validate all three approved images
+        id: convert
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageOps
+          import hashlib
+          images = {
+              'Pierwsze spojrzenie na Eryndor.png': 'chronicles-introduction.webp',
+              'Tryptyk krain Ludy Eryndoru.png': 'chronicles-peoples.webp',
+              'Szlak ku Górskiej Twierdzy.png': 'chronicles-trials.webp',
+          }
+          missing = [name for name in images if not Path(name).is_file()]
+          if missing:
+              raise FileNotFoundError('Missing approved PNG(s): ' + ', '.join(missing))
+          out = Path('assets/lore')
+          out.mkdir(parents=True, exist_ok=True)
+          for source_name, result_name in images.items():
+              source = Path(source_name)
+              target = out / result_name
+              with Image.open(source) as opened:
+                  image = ImageOps.exif_transpose(opened).convert('RGB')
+                  w, h = image.size
+                  assert w >= 1200 and h >= 650, f'Original artwork too small: {source} {w}x{h}'
+                  assert abs(w / h - 16 / 9) <= 0.045, f'Artwork must be 16:9: {source} {w}x{h}'
+                  # Preserve all visual content, no arbitrary cropping.
+                  image = image.resize((1152, 648), Image.Resampling.LANCZOS)
+                  for q in (72, 64, 56, 48, 40, 32, 24, 18):
+                      image.save(target, format='WEBP', quality=q, method=6)
+                      if target.stat().st_size <= 100000:
+                          break
+              payload = target.read_bytes()
+              assert 10000 < len(payload) <= 100000, f'WEBP over Android-safe budget: {target}'
+              assert payload[:4] == b'RIFF' and payload[8:12] == b'WEBP'
+              with Image.open(target) as verify:
+                  verify.load()
+                  assert verify.format == 'WEBP' and verify.size == (1152, 648)
+              print(f'{source_name} -> {target}: {len(payload)} bytes, sha256={hashlib.sha256(payload).hexdigest()}')
+          Path('image_import_ready.txt').write_text('yes')
+          PY
+          if [[ "$(cat image_import_ready.txt)" == yes ]]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Validate generated offline articles (PL and EN)
+        if: steps.convert.outputs.ready == 'true'
+        run: |
+          python3 build_pages.py
+          python3 - <<'PY'
+          import json,base64,re
+          from pathlib import Path
+          pl=json.loads(Path('_site/articles.json').read_text(encoding='utf-8'))
+          en=json.loads(Path('_site/articles.en.json').read_text(encoding='utf-8'))
+          assert pl['revision']==43
+          for aid in ('chronicles-introduction', 'chronicles-peoples', 'chronicles-trials'):
+              item=next(x for x in pl['articles'] if x['id']==aid)
+              match=re.findall(r'data:image/webp;base64,([A-Za-z0-9+/=]+)',item['content'])
+              assert len(match)==1, (aid,len(match))
+              decoded=base64.b64decode(match[0],validate=True)
+              assert decoded[:4]==b'RIFF' and decoded[8:12]==b'WEBP'
+              assert len(item['content']) < 350000, (aid,len(item['content']))
+          english=next(x for x in en['articles'] if x['id']=='chronicles-trials')
+          assert english['content'].count('data:image/webp;base64,')==1
+          assert len(english['content']) < 350000
+          print('All three approved illustrations are valid in the offline PL/EN feeds.')
+          PY
+      - name: Commit final WebP assets only
+        if: steps.convert.outputs.ready == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/lore/chronicles-introduction.webp assets/lore/chronicles-peoples.webp assets/lore/chronicles-trials.webp
+          git rm -- Pierwsze spojrzenie na Eryndor.png Tryptyk krain Ludy Eryndoru.png Szlak ku Górskiej Twierdzy.png
+          git commit -m "assets(wiki): three approved illustrations for Wiki v43"
+          git push origin HEAD:wiki-v43-lore-panels

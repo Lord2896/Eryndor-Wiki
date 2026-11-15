@@ -58,7 +58,7 @@ jobs:
               assert ids.issubset(set(pl_ids)), (locale,ids-set(pl_ids))
               for a in packet['articles']:
                   assert not re.search(r'@@(?:BACKPACK|WAYSTONES)_CARD:|@@COOKING_IMAGE@@|@@LORE_IMAGE:',a['content'])
-                  if locale == 'pl' and a['id'] in ('chronicles-story-1','chronicles-story-2','chronicles-story-3','chronicles-story-4','chronicles-story-5','chronicles-story-6'):
+                  if locale == 'pl' and a['id'] in ('chronicles-story-1','chronicles-story-2','chronicles-story-3','chronicles-story-4','chronicles-story-5','chronicles-story-6','chronicles-introduction','chronicles-peoples','chronicles-trials'):
                       assert a['content'].count('data:image/webp;base64,') == 1, ('missing lore illustration',a['id'])
                       assert a['content'].count('<img class="recipe-image"') == 1, ('missing Android-compatible lore img',a['id'])
                       assert '<figure' not in a['content'], ('unsupported lore figure wrapper',a['id'])
@@ -66,6 +66,11 @@ jobs:
                       assert a['content'].startswith('<p><strong>'), ('missing bold lead sentence',a['id'])
                       assert not re.search(r'<figcaption|<p[^>]*>\s*<em>',a['content']), ('unexpected artwork caption',a['id'])
                       assert len(a['content']) < 350000, ('Lore exceeds Android legacy article limit',a['id'])
+                  if locale == 'en' and a['id'] == 'chronicles-trials':
+                      assert a['content'].count('data:image/webp;base64,') == 1, 'EN Trials illustration missing'
+                      assert '<img class="recipe-image"' in a['content'], 'EN Trials must use Android-compatible image'
+                      assert a['content'].startswith('<p><strong>'), 'EN Trials lead missing'
+                      assert len(a['content']) < 350000, 'EN Trials exceeds safe image limit'
                   for target in re.findall(r'data-go="([^"]+)"',a['content']):
                       assert target in pl_ids, (locale,a['id'],target)
           assert meta['languages']['pl']['sha256']==legacy['sha256']
