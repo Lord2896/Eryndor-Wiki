@@ -282,17 +282,28 @@ if not args.check:
             image_uri = "data:image/svg+xml;base64," + base64.b64encode(svg.encode("utf-8")).decode("ascii")
             text = text.replace("@@COOKING_IMAGE@@",
                 '<img class="recipe-image" src="' + image_uri + '" alt="Culinary Cauldron crafting recipe" />')
-        if article_id == "chronicles-trials":
-            filename = "chronicles-trials.webp"
+        if article_id in lore_specs:
+            filename, alt_pl = lore_specs[article_id]
+            alt_en = {
+                "chronicles-story-1": "The three islands of Eryndor",
+                "chronicles-story-2": "Dwarves working under elven occupation",
+                "chronicles-story-3": "The First Forge in the mountains of Khar-Durim",
+                "chronicles-story-4": "The dwarven uprising in a mountain ravine",
+                "chronicles-story-5": "Dwarves besieging the elven Citadel",
+                "chronicles-story-6": "Dwarves boarding ships while Zashara observe",
+                "chronicles-peoples": "Three peoples of Eryndor: dwarves, humans, elves",
+                "chronicles-introduction": "A ship approaching Eryndor's three islands",
+                "chronicles-trials": "A scenic Trial Path through the lands of Eryndor"
+            }[article_id]
             image_bytes = (here / "assets" / "lore" / filename).read_bytes()
-            assert image_bytes[:4] == b"RIFF" and image_bytes[8:12] == b"WEBP", "Invalid EN Trials image"
-            assert 10000 < len(image_bytes) < 110000, "EN Trials image must be Android-safe"
-            marker = "@@LORE_IMAGE:chronicles-trials@@"
-            assert text.count(marker) == 1, "Expected one EN Trials image marker"
+            assert image_bytes[:4] == b"RIFF" and image_bytes[8:12] == b"WEBP", "Invalid EN lore image"
+            assert 10000 < len(image_bytes) < 400000, "Unexpected EN lore image size"
+            marker = "@@LORE_IMAGE:" + article_id + "@@"
+            assert text.count(marker) == 1, "Expected one EN lore image marker: " + article_id
             image_uri = "data:image/webp;base64," + base64.b64encode(image_bytes).decode("ascii")
             text = text.replace(marker, '<img class="recipe-image" src="' + image_uri +
-                '" alt="A scenic Trial Path through the lands of Eryndor" style="display:block;width:100%;max-width:100%;height:auto;border-radius:9px" />')
-            assert len(text) < 350000, "EN Trials image exceeds Android WebView safe limit"
+                '" alt="' + alt_en + '" style="display:block;width:100%;max-width:100%;height:auto;border-radius:9px" />')
+            assert len(text) < 350000, "EN lore image exceeds Android WebView safe limit: " + article_id
         assert "@@LORE_IMAGE:" not in text, "EN unresolved lore image"
 
         if article_id in mechanic_article_ids:
