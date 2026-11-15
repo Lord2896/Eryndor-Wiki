@@ -1,5 +1,7 @@
 name: Validate Eryndor Wiki PL-EN
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [wiki-v0.6.0-pl-en, wiki-kroniki-2026-10-19, main]
     paths:
