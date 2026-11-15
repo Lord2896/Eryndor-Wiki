@@ -1,0 +1,153 @@
+name: Import Wiki v45 approved gameplay screenshots
+on:
+  push:
+    branches: [wiki-v45-mechanics-screenshots]
+    paths:
+      - 'incoming-v45/**'
+      - '100003*.png'
+      - '100003*.webp'
+      - 'image(20261115-090235).png'
+      - 'image(20261115-090302).png'
+      - '.github/workflows/import-v45-screenshots.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki-v45-approved-import
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: wiki-v45-mechanics-screenshots
+          fetch-depth: 0
+      - name: Install image tooling
+        run: python3 -m pip install 'Pillow>=10,<13' 'numpy>=1.26,<3'
+      - name: Inspect and convert approved screenshots
+        id: convert
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageOps
+          import json, hashlib, os
+          specs=[
+              ("pokeguess-game","1000036392.webp",85000),
+              ("pokeguess-menu","1000036393.webp",85000),
+              ("pokewordle-game","1000036394.webp",85000),
+              ("pokewordle-menu","1000036395.png",85000),
+              ("bingo-board","1000036396.webp",90000),
+              ("mastery-party","1000036397.png",54000),
+              ("mastery-progress","1000036398.png",54000),
+              ("mastery-aura","1000036399.png",49000),
+              ("mastery-pc","1000036400.webp",49000),
+              ("identity-menu","1000036401.webp",85000),
+              ("identity-chat","1000036402.webp",85000),
+              ("cooking-cauldron","1000036404.webp",70000),
+              ("cooking-menu","1000036405.webp",70000),
+              ("cooking-atlas","1000036406.webp",70000),
+              ("daily-board","1000036408.png",85000),
+              ("daily-menu","1000036409.webp",85000),
+              ("mushrooms-world","1000036410.png",70000),
+              ("mushrooms-atlas","1000036411.webp",70000),
+              ("mushrooms-alchemist","1000036412.webp",70000),
+              ("fishing-minigame","image(20261115-090235).png",85000),
+              ("fishing-atlas","image(20261115-090302).png",85000),
+          ]
+          sources={}
+          missing=[]
+          for key, filename, budget in specs:
+              candidates=[Path("incoming-v45")/filename,Path(filename)]
+              found=next((p for p in candidates if p.is_file()),None)
+              if found is None:
+                  missing.append(filename)
+              else:
+                  sources[key]=(found,budget)
+          if missing:
+              print(f"Not publishing: {len(missing)} of 21 approved files are not in the GitHub branch.")
+              print("Missing inputs:", ", ".join(missing))
+              Path("image_import_ready.txt").write_text("no")
+              raise SystemExit(0)
+          assert len(sources)==21, "Expected 21 unique screenshot files"
+          dst=Path("assets/screenshots")
+          dst.mkdir(parents=True,exist_ok=True)
+          records=[]
+          for key, (source,budget) in sources.items():
+              target=dst/(key+".webp")
+              with Image.open(source) as original:
+                  original.verify()
+              with Image.open(source) as opened:
+                  base=ImageOps.exif_transpose(opened).convert("RGB")
+                  width,height=base.size
+                  assert width >= 290 and height >= 290, f"Image too small: {source}"
+                  found=False
+                  for max_width in (1240,1120,1000,900,800,700):
+                      w=min(max_width,width)
+                      h=round(height*w/width)
+                      im=base if w == width else base.resize((w,h),Image.Resampling.LANCZOS)
+                      for quality in (82,72,62,52,42,32,24):
+                          im.save(target,format="WEBP",quality=quality,method=5)
+                          size=target.stat().st_size
+                          if 6000 <= size <= budget:
+                              found=True
+                              break
+                      if found: break
+                  assert found, f"Could not compress approved screenshot safely: {source}"
+              data=target.read_bytes()
+              assert data[:4]==b"RIFF" and data[8:12]==b"WEBP"
+              with Image.open(target) as validated:
+                  validated.load()
+                  assert validated.format=="WEBP" and validated.size==(w,h)
+              records.append((key,str(source),str(target),len(data),hashlib.sha256(data).hexdigest()))
+              print(f"{key}: {source} -> {target} ({w}x{h}; {len(data)} bytes; SHA256 {records[-1][4]})")
+          Path("processed_sources.txt").write_text("\n".join(str(sources[key][0]) for key in sources)+"\n")
+          Path("image_import_ready.txt").write_text("yes")
+          assert len(records)==21
+          PY
+          if [[ "$(cat image_import_ready.txt)" == yes ]]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Validate Polish and English offline articles
+        if: steps.convert.outputs.ready == 'true'
+        run: |
+          python3 build_pages.py --check
+          python3 build_pages.py
+          python3 - <<'PY'
+          import json,re,base64
+          from pathlib import Path
+          expected={'mastery':4,'identity':2,'cooking':3,'daily-quests':2,'mushrooms':3,'fishing':2,'bingo':1,'pokeguess':2,'pokewordle':2}
+          for locale,name in [('pl','articles.json'),('en','articles.en.json')]:
+              packet=json.loads((Path('_site')/name).read_text(encoding='utf-8'))
+              if locale=='pl':
+                  assert packet['revision']==45 and len(packet['articles'])==29
+              for article_id,number in expected.items():
+                  article=next(x for x in packet['articles'] if x['id']==article_id)
+                  all_images=re.findall(r'data:image/webp;base64,([A-Za-z0-9+/=]+)',article['content'])
+                  assert len(all_images)==number,(locale,article_id,len(all_images),number)
+                  for encoded in all_images:
+                      blob=base64.b64decode(encoded,validate=True)
+                      assert blob[:4]==b'RIFF' and blob[8:12]==b'WEBP'
+                  assert len(article['content'])<350000,(locale,article_id,len(article['content']))
+              print(f"OK: {locale} screenshots in all nine articles")
+          PY
+      - name: Commit verified compressed screenshots
+        if: steps.convert.outputs.ready == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/screenshots/*.webp
+          mapfile -t source_files < processed_sources.txt
+          git rm -f -- "${source_files[@]}"
+          if git diff --cached --quiet; then
+            echo 'No changes'
+          else
+            git commit -m "assets(wiki v45): import 21 optimized offline gameplay screenshots"
+            git push origin HEAD:wiki-v45-mechanics-screenshots
+          fi
