@@ -3,9 +3,9 @@ on:
   push:
     branches: [wiki-v43-lore-panels]
     paths:
-      - 'wiki43-introduction.png'
-      - 'wiki43-peoples.png'
-      - 'wiki43-trials.png'
+      - 'Pierwsze spojrzenie na Eryndor.png'
+      - 'Tryptyk krain Ludy Eryndoru.png'
+      - 'Szlak ku Górskiej Twierdzy.png'
       - '.github/workflows/import-v43-artwork.yml'
   workflow_dispatch:
 
@@ -34,16 +34,13 @@ jobs:
           from PIL import Image, ImageOps
           import hashlib
           images = {
-              'wiki43-introduction.png': 'chronicles-introduction.webp',
-              'wiki43-peoples.png': 'chronicles-peoples.webp',
-              'wiki43-trials.png': 'chronicles-trials.webp',
+              'Pierwsze spojrzenie na Eryndor.png': 'chronicles-introduction.webp',
+              'Tryptyk krain Ludy Eryndoru.png': 'chronicles-peoples.webp',
+              'Szlak ku Górskiej Twierdzy.png': 'chronicles-trials.webp',
           }
           missing = [name for name in images if not Path(name).is_file()]
           if missing:
-              print('Waiting for these approved PNGs:', ', '.join(missing))
-              with open('image_import_ready.txt', 'w') as marker:
-                  marker.write('no')
-              raise SystemExit(0)
+              raise FileNotFoundError('Missing approved PNG(s): ' + ', '.join(missing))
           out = Path('assets/lore')
           out.mkdir(parents=True, exist_ok=True)
           for source_name, result_name in images.items():
@@ -102,6 +99,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add assets/lore/chronicles-introduction.webp assets/lore/chronicles-peoples.webp assets/lore/chronicles-trials.webp
-          git rm -- wiki43-introduction.png wiki43-peoples.png wiki43-trials.png
+          git rm -- Pierwsze spojrzenie na Eryndor.png Tryptyk krain Ludy Eryndoru.png Szlak ku Górskiej Twierdzy.png
           git commit -m "assets(wiki): three approved illustrations for Wiki v43"
           git push origin HEAD:wiki-v43-lore-panels
