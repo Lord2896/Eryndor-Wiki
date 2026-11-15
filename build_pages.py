@@ -154,6 +154,27 @@ if not args.check:
         "ascension-relics": ("ascension", "ascension-relics.webp", "Przedmioty potrzebne do Reliktu Przebudzenia", "Items used in the Awakening Relic"),
         "expeditions-list": ("expeditions", "expeditions-list.webp", "Lista dostępnych ekspedycji", "List of available expeditions"),
         "expeditions-detail": ("expeditions", "expeditions-detail.webp", "Wymagania oraz nagrody wybranej ekspedycji", "Expedition requirements and rewards"),
+        "pokeguess-menu": ("pokeguess", "pokeguess-menu.webp", "PokéGuess: tryb Daily i Unlimited", "PokéGuess Daily and Unlimited modes"),
+        "pokeguess-game": ("pokeguess", "pokeguess-game.webp", "Ekran zgadywania Pokémona i wskazówki", "Pokémon guessing screen and hints"),
+        "pokewordle-menu": ("pokewordle", "pokewordle-menu.webp", "PokéWordle: tryby rozgrywki", "PokéWordle game modes"),
+        "pokewordle-game": ("pokewordle", "pokewordle-game.webp", "Plansza PokéWordle i kolorowe podpowiedzi", "PokéWordle puzzle grid and letter hints"),
+        "bingo-board": ("bingo", "bingo-board.webp", "Plansza Bingo z informacjami o Pokémonie", "Bingo board with Pokémon information"),
+        "mastery-party": ("mastery", "mastery-party.webp", "Wybór Pokémona w systemie Mastery", "Selecting a Pokémon in Mastery"),
+        "mastery-progress": ("mastery", "mastery-progress.webp", "Panel postępu Mastery", "Mastery progression details"),
+        "mastery-aura": ("mastery", "mastery-aura.webp", "Charizard z aurą Mastery", "Charizard with a Mastery aura"),
+        "mastery-pc": ("mastery", "mastery-pc.webp", "Odznaki Mastery przy Pokémonach w PC", "Mastery rank badges in the PC"),
+        "identity-menu": ("identity", "identity-menu.webp", "Lista tytułów Eryndor Identity", "Eryndor Identity title selection"),
+        "identity-chat": ("identity", "identity-chat.webp", "Kolorowe tytuły na czacie", "Colored chat titles"),
+        "cooking-cauldron": ("cooking", "cooking-cauldron.webp", "Kocioł Kulinarny nad ogniskiem", "Culinary Cauldron over a campfire"),
+        "cooking-menu": ("cooking", "cooking-menu.webp", "Interfejs Kociołka Kulinarnego", "Culinary Cauldron cooking interface"),
+        "cooking-atlas": ("cooking", "cooking-atlas.webp", "Atlas Kulinarny z ukrytymi daniami", "Culinary Atlas with hidden dishes"),
+        "daily-board": ("daily-quests", "daily-board.webp", "Tablica Zleceń w świecie Minecrafta", "Daily Quest Board in the world"),
+        "daily-menu": ("daily-quests", "daily-menu.webp", "Trzy zadania i ich postęp", "Three daily quests and their progress"),
+        "mushrooms-world": ("mushrooms", "mushrooms-world.webp", "Grzyb rosnący w lesie", "Mushroom growing in a forest"),
+        "mushrooms-atlas": ("mushrooms", "mushrooms-atlas.webp", "Atlas Grzybów", "Mushroom Foraging Atlas"),
+        "mushrooms-alchemist": ("mushrooms", "mushrooms-alchemist.webp", "Wymiana grzybów na EXP Candy u Alchemika", "Alchemist mushroom exchange for EXP Candy"),
+        "fishing-minigame": ("fishing", "fishing-minigame.webp", "Minigra łowienia", "Fishing minigame"),
+        "fishing-atlas": ("fishing", "fishing-atlas.webp", "Wpis w Atlasie Ryb", "Fish Atlas entry"),
     }
     mechanic_image_uris = {}
     screenshot_published = output / "assets" / "screenshots"
@@ -172,7 +193,8 @@ if not args.check:
                '" style="display:block;width:100%;max-width:100%;height:auto;border-radius:9px" />')
         article["content"] = article["content"].replace(marker, tag)
         shutil.copyfile(src, screenshot_published / filename)
-    for mechanic_article_id in ("rifts", "expeditions", "ascension"):
+    mechanic_article_ids = {entry[0] for entry in mechanic_specs.values()}
+    for mechanic_article_id in mechanic_article_ids:
         item = next(a for a in items if a["id"] == mechanic_article_id)
         assert "@@MECH_IMAGE:" not in item["content"], "Unresolved mechanic image placeholder"
         assert len(item["content"]) < 350000, "Mechanic article exceeds Android WebView limit"
@@ -273,7 +295,7 @@ if not args.check:
             assert len(text) < 350000, "EN Trials image exceeds Android WebView safe limit"
         assert "@@LORE_IMAGE:" not in text, "EN unresolved lore image"
 
-        if article_id in ("rifts", "expeditions", "ascension"):
+        if article_id in mechanic_article_ids:
             for name, (target_id, filename, alt_pl, alt_en) in mechanic_specs.items():
                 if target_id != article_id:
                     continue
