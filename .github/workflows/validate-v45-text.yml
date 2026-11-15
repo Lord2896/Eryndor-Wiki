@@ -1,0 +1,50 @@
+name: Validate Wiki v45 article sources before image import
+on:
+  push:
+    branches: [wiki-v45-mechanics-screenshots]
+    paths:
+      - 'articles.json'
+      - 'translations/en.json'
+      - 'build_pages.py'
+      - '.github/workflows/validate-v45-text.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and check schema
+        run: |
+          python3 -m py_compile build_pages.py
+          python3 build_pages.py --check
+      - name: Check article translations and image marker locations
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json,re
+          pl=json.loads(Path('articles.json').read_text(encoding='utf-8'))
+          en=json.loads(Path('translations/en.json').read_text(encoding='utf-8'))
+          assert pl['revision']==45 and len(pl['articles'])==29
+          assert len(en['articles'])==21
+          counts={'mastery':4,'identity':2,'cooking':3,'daily-quests':2,'mushrooms':3,'fishing':2,'bingo':1,'pokeguess':2,'pokewordle':2}
+          ids={a['id'] for a in pl['articles']}
+          allmarkers=[]
+          for a in pl['articles']:
+              for target in re.findall(r'data-go="([^"]+)"',a['content']):
+                  assert target in ids,(a['id'],target)
+          for aid,count in counts.items():
+              p=next(x for x in pl['articles'] if x['id']==aid)
+              t=en['articles'][aid]
+              pm=sorted(re.findall(r'@@MECH_IMAGE:([^@]+)@@',p['content']))
+              em=sorted(re.findall(r'@@MECH_IMAGE:([^@]+)@@',t['content']))
+              assert len(pm)==count and pm==em,(aid,pm,em)
+              assert p['updatedAt']==t['sourceUpdatedAt'],aid
+              allmarkers.extend(pm)
+          assert len(allmarkers)==21 and len(set(allmarkers))==21,allmarkers
+          m=next(x for x in pl['articles'] if x['id']=='mushrooms')
+          assert 'bagnach Eryndoru' in m['content']
+          assert 'swamps of Eryndor' in en['articles']['mushrooms']['content']
+          print('Validated: 29 PL, 21 EN, 21 screenshot markers, NPC swamp witch, all related links.')
+          PY
