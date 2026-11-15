@@ -3,14 +3,16 @@ on:
   push:
     branches: [wiki-v48-casino-screenshots]
     paths:
+      - 'eryndor-wiki-v48-casino-screenshots.zip'
       - 'assets/screenshots/casino-hall.webp'
       - 'assets/screenshots/casino-blackjack.webp'
       - 'assets/screenshots/casino-slots.webp'
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
+  actions: write
 
 jobs:
   verify-and-merge:
@@ -28,6 +30,16 @@ jobs:
           from PIL import Image
           from pathlib import Path
           import hashlib
+          from zipfile import ZipFile
+          zip_path=Path("eryndor-wiki-v48-casino-screenshots.zip")
+          if zip_path.exists():
+              with ZipFile(zip_path) as archive:
+                  expected={"casino-hall.webp","casino-blackjack.webp","casino-slots.webp"}
+                  assert set(archive.namelist())==expected, "ZIP must contain exactly the three approved images"
+                  dest=Path("assets/screenshots")
+                  dest.mkdir(parents=True,exist_ok=True)
+                  for name in sorted(expected):
+                      (dest/name).write_bytes(archive.read(name))
           files = {
               "casino-hall.webp": ("44392fbe902f27686fc92b70420684ccb9ad873e57385c3c36e5fc21ae4b29cb", (1200,626)),
               "casino-blackjack.webp": ("df947c7f433036e0d27ee2a4b4d1927cfc7839fdaeb7f2470f72ebb4f4fc1984", (1200,618)),
@@ -68,8 +80,24 @@ jobs:
               assert '@@MECH_IMAGE:' not in article['content']
           print("Both casino articles are valid and completely offline.")
           PY
+      - name: Commit approved WebP images and remove temporary ZIP
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/screenshots/casino-hall.webp assets/screenshots/casino-blackjack.webp assets/screenshots/casino-slots.webp
+          if [ -f eryndor-wiki-v48-casino-screenshots.zip ]; then
+            git rm -f eryndor-wiki-v48-casino-screenshots.zip
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m "assets(wiki v48): add 3 approved casino screenshots"
+            git push origin HEAD:wiki-v48-casino-screenshots
+          fi
       - name: Merge approved PR into main
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh pr merge 11 --repo "${{ github.repository }}" --squash --subject "Wiki v48: casino article with 3 approved offline screenshots"
+      - name: Trigger GitHub Pages publication for main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-pages.yml --ref main --repo "${{ github.repository }}"
