@@ -76,7 +76,7 @@ jobs:
                   if a['id'] in ('rifts','expeditions','ascension','mastery','identity','cooking','daily-quests','mushrooms','fishing','bingo','pokeguess','pokewordle'):
                       expected={'rifts':2,'expeditions':2,'ascension':3,'mastery':4,'identity':2,'cooking':3,'daily-quests':2,'mushrooms':3,'fishing':2,'bingo':1,'pokeguess':2,'pokewordle':2}[a['id']]
                       assert a['content'].count('data:image/webp;base64,') == expected, ('mechanic screenshots',locale,a['id'])
-                      assert a['content'].count('<img class="recipe-image"') == expected, ('mechanic image tags',locale,a['id'])
+                      assert a['content'].count('<img class="recipe-image" src="data:image/webp;base64,') == expected, ('mechanic image tags',locale,a['id'])
                       assert len(a['content']) < 350000, ('mechanic article exceeds Android limit',locale,a['id'])
                   for target in re.findall(r'data-go="([^"]+)"',a['content']):
                       assert target in pl_ids, (locale,a['id'],target)
