@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "revision": 46,
+  "revision": 47,
   "articles": [
     {
       "id": "wiki-guide",
@@ -116,7 +116,7 @@
       "id": "casino",
       "title": "Kasyno 777 i sklep żetonów",
       "summary": "Automat 777, blackjack, Jade Orby, Żetony Kasyna i nagrody CoinToShop.",
-      "content": "<p><strong>Kasyno 777</strong> to ukończona atrakcja Eryndoru, w której możesz zagrać na automacie lub w blackjacka. Nagrodą są <strong>Żetony Kasyna</strong>, wykorzystywane później w specjalnym sklepie prowadzonym przez NPC.</p>\n<h3>Automat 777</h3>\n<p>Rozpoczęcie jednego spinu wymaga <strong>3 Jade Orb</strong>. Jeden Jade Orb ma wartość <strong>500 ₽</strong>, co daje koszt <strong>1 500 ₽ za spin</strong>. Automat losuje wynik i wypłaca odpowiednią nagrodę w żetonach, jeśli padnie zwycięska kombinacja.</p>\n<p>Liczba żetonów i szanse na konkretne symbole zależą od reguł samego automatu — nie należy traktować spinu jako gwarantowanego zysku.</p>\n<h3>Blackjack</h3>\n<p>Jedna rozgrywka blackjacka kosztuje <strong>1 Jade Orb (500 ₽)</strong>. Celem jest uzyskanie wyniku bliższego 21 niż krupier, bez przekroczenia 21 punktów, zgodnie z zasadami udostępnionego minigame.</p>\n<div class=\"table-scroll\"><table><thead><tr><th>Rezultat</th><th>Nagroda</th></tr></thead><tbody>\n<tr><td>Zwykła wygrana</td><td>2 Żetony Kasyna</td></tr><tr><td>Blackjack (oczko)</td><td>3 Żetony Kasyna</td></tr>\n</tbody></table></div>\n\n<h3>Żetony i sklep kasynowy</h3>\n<p><strong>Żeton Kasyna</strong> ma własną ikonę i można go wymieniać na nagrody w sklepie CoinToShop. Sklep posiada <strong>4 kategorie towarów</strong>, a ceny wybranych nagród sięgają <strong>2 300 żetonów</strong>.</p>\n<p>Sklep otwiera się przez <strong>odpowiedniego NPC</strong>; nie ma potrzeby zapamiętywania komendy. Dostęp do sklepu skrótem klawiszowym jest wyłączony.</p>\n<h3>Powiązane zlecenia dzienne</h3>\n<p>Kasyno może pojawić się w systemie Daily Quests: <strong>10 spinów automatu</strong> to zadanie za <strong>15 000 ₽</strong>, a <strong>5 rund blackjacka</strong> — za <strong>7 500 ₽</strong>. Progres zalicza się na podstawie rzeczywiście rozegranych prób.</p>\n<h3>Na co uważać?</h3>\n<ul><li><strong>Jade Orb to koszt gry</strong>, a Żeton Kasyna jest osobną walutą nagród.</li><li>Nawet po kilku przegranych nie należy oczekiwać automatycznej rekompensaty. Graj tylko za środki, które chcesz przeznaczyć na tę atrakcję.</li><li>Ceny w sklepie i jego aktualna oferta mogą zostać dostosowane do balansu serwera. Najbardziej aktualną ofertę zobaczysz u NPC.</li></ul>\n\n<h3>Powiązane artykuły</h3><div class=\"related\"><button data-go=\"daily-quests\">Daily Quests ↗</button><button data-go=\"bingo\">Bingo ↗</button></div>",
+      "content": "<p><strong>Kasyno 777</strong> to atrakcja Eryndoru, w której możesz zagrać na automacie lub w blackjacka. Nagrodą są <strong>Żetony Kasyna</strong>, wykorzystywane później w specjalnym sklepie prowadzonym przez NPC.</p>\n<p class=\"mechanic-image\">@@MECH_IMAGE:casino-hall@@</p>\n<h3>Automat 777</h3>\n<p>Każdy spin automatu kosztuje <strong>1 Jade Orb</strong>. U sklepikarza w kasynie Jade Orb kosztuje obecnie <strong>1000 ₽</strong>; cena u innych handlarzy może być inna. Automat losuje symbole i wypłaca nagrodę w żetonach, jeżeli trafi się zwycięska kombinacja.</p>\n<p class=\"mechanic-image\">@@MECH_IMAGE:casino-slots@@</p>\n<p>Szanse na poszczególne kombinacje i wysokość nagród wynikają z zasad automatu. Spin nie gwarantuje wygranej.</p>\n<h3>Blackjack</h3>\n<p>Jedna rozgrywka blackjacka wymaga <strong>1 Jade Orb</strong>. Celem jest uzyskanie wyniku bliższego 21 niż krupier, bez przekroczenia 21 punktów. Przy stole wybierasz między dobieraniem karty (<strong>Hit</strong>) a zatrzymaniem wyniku (<strong>Stay</strong>).</p>\n<p class=\"mechanic-image\">@@MECH_IMAGE:casino-blackjack@@</p>\n<div class=\"table-scroll\"><table><thead><tr><th>Rezultat</th><th>Nagroda</th></tr></thead><tbody>\n<tr><td>Zwykła wygrana</td><td>2 Żetony Kasyna</td></tr><tr><td>Blackjack (oczko)</td><td>3 Żetony Kasyna</td></tr>\n</tbody></table></div>\n<h3>Żetony i sklep kasynowy</h3>\n<p><strong>Żeton Kasyna</strong> ma własną ikonę i można go wymieniać na nagrody w sklepie CoinToShop. Sklep posiada <strong>4 kategorie towarów</strong>, a ceny wybranych nagród sięgają <strong>2300 żetonów</strong>.</p>\n<p>Sklep otwiera się przez <strong>odpowiedniego NPC</strong>; nie ma potrzeby zapamiętywania komendy. Dostęp do sklepu skrótem klawiszowym jest wyłączony.</p>\n<h3>Powiązane zlecenia dzienne</h3>\n<p>Kasyno może pojawić się w systemie Daily Quests: <strong>10 spinów automatu</strong> to zadanie za <strong>15 000 ₽</strong>, a <strong>5 rund blackjacka</strong> — za <strong>7500 ₽</strong>. Progres zalicza się na podstawie rzeczywiście rozegranych prób.</p>\n<h3>Na co uważać?</h3>\n<ul><li><strong>Jade Orb to koszt gry</strong>, a Żeton Kasyna jest osobną walutą nagród.</li><li>Przegrane próby nie zapewniają automatycznej rekompensaty.</li><li>Ceny w sklepie i jego aktualna oferta mogą zostać dostosowane do balansu serwera. Najbardziej aktualną ofertę zobaczysz u NPC.</li></ul>\n<h3>Powiązane artykuły</h3><div class=\"related\"><button data-go=\"daily-quests\">Daily Quests ↗</button><button data-go=\"bingo\">Bingo ↗</button></div>",
       "icon": "♠",
       "tags": [
         "Kasyno",
@@ -124,9 +124,9 @@
         "Żetony",
         "Sklep"
       ],
-      "search": "casino 777 blackjack jade orb żetony cointoshop automat slot",
+      "search": "casino 777 blackjack jade orb żetony cointoshop automat slot sloty stawka automaty wnętrze",
       "cat": "Mechaniki",
-      "updatedAt": "2026-10-15T09:08:07.206Z"
+      "updatedAt": "2026-11-15T13:00:13.000Z"
     },
     {
       "id": "identity",
