@@ -1,5 +1,7 @@
 name: Validate Eryndor Wiki PL-EN
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [wiki-v0.6.0-pl-en, wiki-kroniki-2026-10-19, main]
     paths:
@@ -45,8 +47,8 @@ jobs:
             'chronicles-story-4','chronicles-story-5','chronicles-story-6',
             'chronicles-peoples','chronicles-introduction','chronicles-trials'
           ]
-          assert len(pl_ids)==26 and pl_ids[-14:-5]==chronicle_ids and pl_ids[-5:]==['ascension','trade-chain','auras','cosmetics','move-tutors'], (len(pl_ids),pl_ids[-14:])
-          assert len(en_ids)==18 and {'ascension','trade-chain','auras','cosmetics','move-tutors'}.issubset(en_ids), len(en_ids)
+          assert len(pl_ids)==27 and pl_ids[-14:-5]==chronicle_ids and pl_ids[-5:]==['ascension','trade-chain','auras','cosmetics','move-tutors'], (len(pl_ids),pl_ids[-14:])
+          assert len(en_ids)==19 and {'ascension','trade-chain','auras','cosmetics','move-tutors'}.issubset(en_ids), len(en_ids)
           assert set(pl_ids)-en_ids==set(chronicle_ids[:-1]), "Unexpected missing English articles"
           for locale,entry in meta['languages'].items():
               blob=(site/entry['file']).read_bytes()
@@ -57,7 +59,7 @@ jobs:
               assert len(ids)==len(packet['articles']), "Duplicated article ID"
               assert ids.issubset(set(pl_ids)), (locale,ids-set(pl_ids))
               for a in packet['articles']:
-                  assert not re.search(r'@@(?:BACKPACK|WAYSTONES)_CARD:|@@COOKING_IMAGE@@|@@LORE_IMAGE:',a['content'])
+                  assert not re.search(r'@@(?:BACKPACK|WAYSTONES)_CARD:|@@COOKING_IMAGE@@|@@LORE_IMAGE:|@@MECH_IMAGE:',a['content'])
                   if locale == 'pl' and a['id'] in ('chronicles-story-1','chronicles-story-2','chronicles-story-3','chronicles-story-4','chronicles-story-5','chronicles-story-6','chronicles-introduction','chronicles-peoples','chronicles-trials'):
                       assert a['content'].count('data:image/webp;base64,') == 1, ('missing lore illustration',a['id'])
                       assert a['content'].count('<img class="recipe-image"') == 1, ('missing Android-compatible lore img',a['id'])
@@ -71,8 +73,13 @@ jobs:
                       assert '<img class="recipe-image"' in a['content'], 'EN Trials must use Android-compatible image'
                       assert a['content'].startswith('<p><strong>'), 'EN Trials lead missing'
                       assert len(a['content']) < 350000, 'EN Trials exceeds safe image limit'
+                  if a['id'] in ('rifts','expeditions','ascension'):
+                      expected={'rifts':2,'expeditions':2,'ascension':3}[a['id']]
+                      assert a['content'].count('data:image/webp;base64,') == expected, ('mechanic screenshots',locale,a['id'])
+                      assert a['content'].count('<img class="recipe-image"') == expected, ('mechanic image tags',locale,a['id'])
+                      assert len(a['content']) < 350000, ('mechanic article exceeds Android limit',locale,a['id'])
                   for target in re.findall(r'data-go="([^"]+)"',a['content']):
                       assert target in pl_ids, (locale,a['id'],target)
           assert meta['languages']['pl']['sha256']==legacy['sha256']
-          print("26 Polish articles; 18 English articles; 8 full-length Chronicles use documented Polish fallback.")
+          print("27 Polish articles; 19 English articles; 8 full-length Chronicles use documented Polish fallback.")
           PY
