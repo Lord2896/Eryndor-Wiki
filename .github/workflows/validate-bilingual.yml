@@ -21,22 +21,6 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
-      - name: Unpack approved casino screenshots for PR validation
-        if: ${{ github.head_ref == 'wiki-v48-casino-screenshots' }}
-        run: |
-          python3 - <<'PY'
-          from zipfile import ZipFile
-          from pathlib import Path
-          src=Path("eryndor-wiki-v48-casino-screenshots.zip")
-          if src.exists():
-              with ZipFile(src) as z:
-                  expected={'casino-hall.webp','casino-blackjack.webp','casino-slots.webp'}
-                  assert set(z.namelist())==expected
-                  dest=Path("assets/screenshots")
-                  dest.mkdir(parents=True,exist_ok=True)
-                  for name in expected:
-                      (dest/name).write_bytes(z.read(name))
-          PY
       - name: Install image generator dependencies
         run: python3 -m pip install 'Pillow>=10,<13' 'numpy>=1.26,<3'
       - name: Validate legacy PL feed
