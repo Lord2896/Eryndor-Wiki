@@ -1,0 +1,96 @@
+name: Complete Wiki v43 image import
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/complete-v43-import.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: wiki-v43-lore-panels
+          persist-credentials: true
+      - name: Install image dependencies
+        run: python3 -m pip install 'Pillow>=10,<13' 'numpy>=1.26,<3'
+      - name: Prepare three approved illustrations
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from PIL import Image, ImageOps
+          import hashlib
+          sources = {
+              'Pierwsze spojrzenie na Eryndor.png': 'chronicles-introduction.webp',
+              'Tryptyk krain Ludy Eryndoru.png': 'chronicles-peoples.webp',
+              'Szlak ku Górskiej Twierdzy.png': 'chronicles-trials.webp',
+          }
+          dst = Path('assets/lore')
+          dst.mkdir(parents=True, exist_ok=True)
+          for source_name, target_name in sources.items():
+              source = Path(source_name)
+              assert source.is_file(), f'Missing approved original: {source_name}'
+              with Image.open(source) as opened:
+                  image = ImageOps.exif_transpose(opened).convert('RGB')
+                  w,h = image.size
+                  print(f'Original: {source_name} ({w}x{h})',flush=True)
+                  assert w >= 1200 and h >= 650 and abs(w/h - 16/9) < .045
+                  target = dst / target_name
+                  for width in (1152, 1024, 960, 896):
+                      image_small = image.resize((width,width*9//16), Image.Resampling.LANCZOS)
+                      for q in (72,64,56,48,40,32,24,18):
+                          image_small.save(target,format='WEBP',quality=q,method=6)
+                          if 10000 < target.stat().st_size <= 100000:
+                              break
+                      if 10000 < target.stat().st_size <= 100000:
+                          break
+                  payload = target.read_bytes()
+                  assert 10000 < len(payload) <= 100000
+                  assert payload[:4]==b'RIFF' and payload[8:12]==b'WEBP'
+                  with Image.open(target) as check:
+                      check.load()
+                      assert check.format=='WEBP' and abs(check.width/check.height - 16/9) < .005
+                  print(f'Prepared {target}: {len(payload)} bytes sha256 {hashlib.sha256(payload).hexdigest()}', flush=True)
+          PY
+      - name: Validate generated PL and EN offline feeds
+        run: |
+          python3 build_pages.py
+          python3 - <<'PY'
+          from pathlib import Path
+          import json, base64, re
+          pl=json.loads(Path('_site/articles.json').read_text(encoding='utf-8'))
+          en=json.loads(Path('_site/articles.en.json').read_text(encoding='utf-8'))
+          assert pl['revision']==43
+          required=('chronicles-introduction','chronicles-peoples','chronicles-trials')
+          for aid in required:
+              article=next(x for x in pl['articles'] if x['id']==aid)
+              encoded=re.findall(r'data:image/webp;base64,([A-Za-z0-9+/=]+)',article['content'])
+              assert len(encoded)==1, (aid,len(encoded))
+              data=base64.b64decode(encoded[0],validate=True)
+              assert data[:4]==b'RIFF' and data[8:12]==b'WEBP'
+              assert len(article['content']) < 350000
+              print('Validated PL',aid,len(data),flush=True)
+          trial=next(x for x in en['articles'] if x['id']=='chronicles-trials')
+          encoded=re.findall(r'data:image/webp;base64,([A-Za-z0-9+/=]+)',trial['content'])
+          assert len(encoded)==1
+          assert base64.b64decode(encoded[0],validate=True)[8:12]==b'WEBP'
+          assert len(trial['content']) < 350000
+          print('Validated EN chronicles-trials',flush=True)
+          PY
+      - name: Commit verified WebP images to v43 branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/lore/chronicles-introduction.webp assets/lore/chronicles-peoples.webp assets/lore/chronicles-trials.webp
+          if git diff --cached --quiet; then
+            echo "Artwork already committed"
+          else
+            git commit -m "assets(wiki43): validate and add 3 offline illustrations"
+            git push origin HEAD:wiki-v43-lore-panels
+          fi
