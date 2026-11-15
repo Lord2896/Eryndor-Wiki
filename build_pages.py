@@ -147,6 +147,9 @@ if not args.check:
     # articles rather than showing decorative images at the article top.
     # Self-contained WebP images work offline in older Android WebViews.
     mechanic_specs = {
+        "casino-hall": ("casino", "casino-hall.webp", "Wnętrze kasyna Eryndoru", "Interior of the Eryndor casino"),
+        "casino-slots": ("casino", "casino-slots.webp", "Interfejs automatu 777", "777 slot machine interface"),
+        "casino-blackjack": ("casino", "casino-blackjack.webp", "Stół do gry w blackjacka", "Blackjack table"),
         "rifts-shiny": ("rifts", "rifts-shiny.webp", "Jasny krajobraz Shiny Riftu", "Bright landscape of Shiny Rift"),
         "rifts-treasure": ("rifts", "rifts-treasure.webp", "Mroczny krajobraz Treasure Riftu", "Dark landscape of Treasure Rift"),
         "ascension-party": ("ascension", "ascension-party.webp", "Wybór Pokémona do Przebudzenia", "Choosing a Pokemon for Awakening"),

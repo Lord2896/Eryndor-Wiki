@@ -21,6 +21,22 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      - name: Unpack approved casino screenshots for PR validation
+        if: ${{ github.head_ref == 'wiki-v48-casino-screenshots' }}
+        run: |
+          python3 - <<'PY'
+          from zipfile import ZipFile
+          from pathlib import Path
+          src=Path("eryndor-wiki-v48-casino-screenshots.zip")
+          if src.exists():
+              with ZipFile(src) as z:
+                  expected={'casino-hall.webp','casino-blackjack.webp','casino-slots.webp'}
+                  assert set(z.namelist())==expected
+                  dest=Path("assets/screenshots")
+                  dest.mkdir(parents=True,exist_ok=True)
+                  for name in expected:
+                      (dest/name).write_bytes(z.read(name))
+          PY
       - name: Install image generator dependencies
         run: python3 -m pip install 'Pillow>=10,<13' 'numpy>=1.26,<3'
       - name: Validate legacy PL feed
@@ -73,8 +89,8 @@ jobs:
                       assert '<img class="recipe-image"' in a['content'], 'EN Chronicle must use Android-compatible image'
                       assert a['content'].startswith('<p><strong>'), 'EN Chronicle lead missing'
                       assert len(a['content']) < 350000, 'EN Chronicle exceeds safe image limit'
-                  if a['id'] in ('rifts','expeditions','ascension','mastery','identity','cooking','daily-quests','mushrooms','fishing','bingo','pokeguess','pokewordle'):
-                      expected={'rifts':2,'expeditions':2,'ascension':3,'mastery':4,'identity':2,'cooking':3,'daily-quests':2,'mushrooms':3,'fishing':2,'bingo':1,'pokeguess':2,'pokewordle':2}[a['id']]
+                  if a['id'] in ('rifts','expeditions','ascension','mastery','identity','cooking','daily-quests','mushrooms','fishing','bingo','pokeguess','pokewordle','casino'):
+                      expected={'rifts':2,'expeditions':2,'ascension':3,'mastery':4,'identity':2,'cooking':3,'daily-quests':2,'mushrooms':3,'fishing':2,'bingo':1,'pokeguess':2,'pokewordle':2,'casino':3}[a['id']]
                       assert a['content'].count('data:image/webp;base64,') == expected, ('mechanic screenshots',locale,a['id'])
                       assert a['content'].count('<img class="recipe-image" src="data:image/webp;base64,') == expected, ('mechanic image tags',locale,a['id'])
                       assert len(a['content']) < 350000, ('mechanic article exceeds Android limit',locale,a['id'])
@@ -84,5 +100,5 @@ jobs:
           for locale,packet in [('pl',pl_packet),('en',en_packet)]:
               m=next(a for a in packet['articles'] if a['id']=='mushrooms')
               assert ('bagnach Eryndoru' if locale=='pl' else 'swamps of Eryndor') in m['content'], 'Missing swamp witch information'
-          print("29 Polish articles; 21 English articles; 8 full-length Chronicles use documented Polish fallback.")
+          print("29 Polish articles and 29 English articles validated with offline screenshots.")
           PY
