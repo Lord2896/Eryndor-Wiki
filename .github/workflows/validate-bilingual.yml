@@ -47,9 +47,9 @@ jobs:
             'chronicles-story-4','chronicles-story-5','chronicles-story-6',
             'chronicles-peoples','chronicles-introduction','chronicles-trials'
           ]
-          assert len(pl_ids)==29 and pl_ids[13:22]==chronicle_ids and pl_ids[22:27]==['ascension','trade-chain','auras','cosmetics','move-tutors'] and pl_ids[-2:]==['pokeguess','pokewordle'], (len(pl_ids),pl_ids[13:])
-          assert len(en_ids)==29 and {'ascension','trade-chain','auras','cosmetics','move-tutors','pokeguess','pokewordle'}.issubset(en_ids), len(en_ids)
-          assert set(pl_ids)-en_ids==set(), "All 29 articles must have English translations"
+          assert len(pl_ids)==30 and pl_ids[13:22]==chronicle_ids and pl_ids[22:27]==['ascension','trade-chain','auras','cosmetics','move-tutors'] and pl_ids[-2:]==['pokeguess','pokewordle'], (len(pl_ids),pl_ids[13:])
+          assert len(en_ids)==30 and {'ascension','trade-chain','auras','cosmetics','move-tutors','pokeguess','pokewordle','races'}.issubset(en_ids), len(en_ids)
+          assert set(pl_ids)-en_ids==set(), "All 30 articles must have English translations"
           for locale,entry in meta['languages'].items():
               blob=(site/entry['file']).read_bytes()
               packet=json.loads(blob)
@@ -84,5 +84,5 @@ jobs:
           for locale,packet in [('pl',pl_packet),('en',en_packet)]:
               m=next(a for a in packet['articles'] if a['id']=='mushrooms')
               assert ('bagnach Eryndoru' if locale=='pl' else 'swamps of Eryndor') in m['content'], 'Missing swamp witch information'
-          print("29 Polish articles and 29 English articles validated with offline screenshots.")
+          print("30 Polish articles and 30 English articles validated with offline screenshots.")
           PY
