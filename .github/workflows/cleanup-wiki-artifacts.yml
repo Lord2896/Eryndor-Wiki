@@ -1,0 +1,78 @@
+name: Clean obsolete GitHub Pages artifacts
+
+on:
+  push:
+    paths:
+      - '.github/workflows/cleanup-wiki-artifacts.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '31 4 * * *'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old Pages build archives (not deployed site)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPOSITORY: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import datetime as dt
+          import json
+          import os
+          import urllib.request
+
+          repo = os.environ["GH_REPOSITORY"]
+          headers = {
+              "Authorization": f"Bearer {os.environ['GH_TOKEN']}",
+              "Accept": "application/vnd.github+json",
+              "X-GitHub-Api-Version": "2022-11-28",
+              "User-Agent": "eryndor-wiki-pages-artifact-cleanup",
+          }
+          root = f"https://api.github.com/repos/{repo}/actions/artifacts"
+
+          def api(url, method="GET"):
+              with urllib.request.urlopen(urllib.request.Request(url, headers=headers, method=method), timeout=45) as resp:
+                  data = resp.read()
+                  return json.loads(data) if data else None
+
+          artifacts = []
+          page = 1
+          while True:
+              response = api(f"{root}?per_page=100&page={page}")
+              batch = response.get("artifacts", [])
+              artifacts.extend(batch)
+              if len(batch) < 100:
+                  break
+              page += 1
+
+          # Keep the two newest Pages archives plus everything created in the last 24h.
+          pages = sorted((a for a in artifacts if a.get("name", "").startswith("github-pages-")),
+                         key=lambda a: a["created_at"], reverse=True)
+          newest_ids = {a["id"] for a in pages[:2]}
+          cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(hours=24)
+          targets = [a for a in pages
+                     if a["id"] not in newest_ids
+                     and dt.datetime.fromisoformat(a["created_at"].replace("Z", "+00:00")) < cutoff]
+          mib = lambda items: round(sum(a.get("size_in_bytes", 0) for a in items) / 1048576, 2)
+          print(f"All artifacts: {len(artifacts)}, {mib(artifacts)} MiB")
+          print(f"Pages archives: {len(pages)}, {mib(pages)} MiB")
+          print(f"Old Pages archives to remove: {len(targets)}, {mib(targets)} MiB")
+          print(f"Other (non-Pages) artifacts remain untouched: {len(artifacts) - len(pages)}")
+          failures = 0
+          for a in targets:
+              try:
+                  api(f"{root}/{a['id']}", "DELETE")
+                  print(f"Deleted ID={a['id']} name={a['name']} size={a.get('size_in_bytes', 0) / 1048576:.2f} MiB")
+              except Exception as exc:
+                  failures += 1
+                  print(f"FAILED ID={a['id']}: {exc}")
+          print(f"Removed {len(targets)-failures}/{len(targets)} targeted Pages archives.")
+          if failures:
+              raise SystemExit(1)
+          PY
