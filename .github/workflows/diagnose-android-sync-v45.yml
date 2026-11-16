@@ -1,0 +1,58 @@
+name: Diagnose Wiki Android sync v45
+on:
+  push:
+    branches: [diagnostic/android-sync-v45-20261116]
+    paths: ['.github/workflows/diagnose-android-sync-v45.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Wiki build dependencies
+        run: python3 -m pip install 'Pillow>=10,<13' 'numpy>=1.26,<3'
+      - name: Rebuild source and inspect actual file sizes
+        run: |
+          python3 build_pages.py
+          python3 - <<'PY'
+          import json, hashlib
+          from pathlib import Path
+          root=Path("_site")
+          for name in ("manifest-v2.json", "manifest.json", "articles.json", "articles.en.json"):
+              b=(root/name).read_bytes()
+              print("LOCAL",name,"bytes",len(b),"MiB",round(len(b)/1048576,3),"sha256",hashlib.sha256(b).hexdigest())
+              j=json.loads(b)
+              if name.startswith("articles."):
+                  print(" revision",j.get("revision"),"items",len(j.get("articles",[])),"last",j["articles"][-1]["id"])
+              if name.startswith("manifest"):
+                  print(" manifest",j)
+          limit=5*1024*1024
+          for name in ("articles.json", "articles.en.json"):
+              b=(root/name).read_bytes()
+              print("ANDROID MAX_JSON_BYTES:",name,len(b),"/",limit,"OVER_LIMIT",len(b)>limit)
+          PY
+      - name: Verify live GitHub Pages manifest and content from runner
+        run: |
+          python3 - <<'PY'
+          import urllib.request,json,hashlib
+          from pathlib import Path
+          base="https://lord2896.github.io/Eryndor-Wiki/"
+          for path in ("manifest-v2.json","articles.json","articles.en.json"):
+              url=base+path+"?diagnose-20261116"
+              try:
+                  req=urllib.request.Request(url,headers={"Cache-Control":"no-cache","Accept":"application/json","User-Agent":"EryndorWikiDiagnostic/1.0"})
+                  with urllib.request.urlopen(req,timeout=25) as resp:
+                      data=resp.read()
+                      print("LIVE",path,"status",resp.status,"url",resp.url,"bytes",len(data),"content-type",resp.headers.get("Content-Type"),"cache",resp.headers.get("Cache-Control"),"sha256",hashlib.sha256(data).hexdigest())
+                  j=json.loads(data)
+                  if path.startswith("manifest"):
+                      print(" LIVE MANIFEST",j)
+                  else:
+                      print(" LIVE JSON revision",j.get("revision"),"count",len(j.get("articles",[])),"last",j["articles"][-1]["id"])
+                  print(" MATCHES_LOCAL", data==(Path("_site")/path).read_bytes())
+              except Exception as exc:
+                  print(" LIVE ERROR",path,type(exc).__name__,str(exc)[:400])
+          PY
