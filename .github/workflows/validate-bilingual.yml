@@ -47,7 +47,7 @@ jobs:
             'chronicles-story-4','chronicles-story-5','chronicles-story-6',
             'chronicles-peoples','chronicles-introduction','chronicles-trials'
           ]
-          assert len(pl_ids)==30 and pl_ids[13:22]==chronicle_ids and pl_ids[22:27]==['ascension','trade-chain','auras','cosmetics','move-tutors'] and pl_ids[-2:]==['pokeguess','pokewordle'], (len(pl_ids),pl_ids[13:])
+          assert len(pl_ids)==30 and pl_ids[13:22]==chronicle_ids and pl_ids[22:27]==['ascension','trade-chain','auras','cosmetics','move-tutors'] and pl_ids[-3:]==['pokeguess','pokewordle','races'], (len(pl_ids),pl_ids[13:])
           assert len(en_ids)==30 and {'ascension','trade-chain','auras','cosmetics','move-tutors','pokeguess','pokewordle','races'}.issubset(en_ids), len(en_ids)
           assert set(pl_ids)-en_ids==set(), "All 30 articles must have English translations"
           for locale,entry in meta['languages'].items():
